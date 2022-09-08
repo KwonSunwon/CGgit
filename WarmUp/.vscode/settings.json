@@ -1,5 +1,10 @@
 {
   "files.associations": {
-    "iostream": "cpp"
-}
+    "iostream": "cpp",
+    "map": "cpp",
+    "vector": "cpp",
+    "xstring": "cpp",
+    "iosfwd": "cpp"
+},
+"cSpell.enabled": true
 }
