@@ -3,6 +3,7 @@
 #include <iostream>
 #include <random>
 #include <time.h>
+#include <deque>
 
 #define LEFT 0b0001
 #define RIGHT 0b0010
@@ -11,11 +12,16 @@
 
 using namespace std;
 
-int board[30][30];
+// int board[30][30];
+
+deque<int> board[30];
 
 void boardPrint();
 void boardInit();
 void boardMakeRoute();
+
+void boardMoveRight();
+void boardMoveLeft();
 
 int main()
 {
@@ -32,17 +38,16 @@ int main()
         switch (commend)
         {
         case 'r':
-            system("cls");
             boardInit();
             boardMakeRoute();
             boardPrint();
             break;
         case 'a': // move route left
-            system("cls");
+            boardMoveLeft();
             boardPrint();
             break;
         case 'd': // move route right
-            system("cls");
+            boardMoveRight();
             boardPrint();
             break;
         }
@@ -51,11 +56,12 @@ int main()
 
 void boardPrint()
 {
+    system("cls");
     for (int i = 0; i < 30; ++i)
     {
         for (int j = 0; j < 30; ++j)
         {
-            printf("%2d ", board[i][j]);
+            printf("%3d ", board[i][j]);
         }
         cout << "\n";
     }
@@ -64,9 +70,11 @@ void boardPrint()
 void boardInit()
 {
     for (int i = 0; i < 30; ++i)
+        board[i].clear();
+    for (int i = 0; i < 30; ++i)
         for (int j = 0; j < 30; ++j)
         {
-            board[i][j] = 0;
+            board[i].push_back(0);
         }
 }
 
@@ -78,10 +86,11 @@ void boardMakeRoute()
 
     srand(time(NULL));
 
-    int count = 0;
+    int count = 1;
     int xPos = 0;
     int yPos = 0;
     int direction = RIGHT;
+    int lastDirection = -1;
 
     int leftCnt = 0;
     int upCnt = 0;
@@ -92,177 +101,163 @@ void boardMakeRoute()
     bool isSafe;
     bool isSameDirection;
 
+    board[0][0] = 1;
+
     while (1)
     {
-        if (conditionCount == 7)
-            conditionCount = 0;
-
-        board[xPos][yPos] = ++count;
-
-        if (xPos == 29 && yPos == 29 && conditionDirection == 0b1111)
+        switch (direction)
+        {
+        case RIGHT:
+            ++yPos;
+            conditionDirection |= RIGHT;
             break;
 
+        case LEFT:
+            --yPos;
+            conditionDirection |= LEFT;
+            break;
+
+        case UP:
+            --xPos;
+            conditionDirection |= UP;
+            break;
+
+        case DOWN:
+            ++xPos;
+            conditionDirection |= DOWN;
+            break;
+        }
+
+        if (xPos < 0 || xPos > 29 || yPos < 0 || yPos > 29)
+        {
+            return;
+        }
+
+        board[xPos][yPos] = ++count;
+        lastDirection = direction;
+        if (xPos == 29 && yPos == 29 && conditionDirection == 0b1111)
+            break;
         ++conditionCount;
 
-        do
+        if (rand() % 10 == 0 || conditionCount == 7)
         {
-            isSafe = true;
             switch (direction)
             {
             case RIGHT:
-                if (yPos >= 29)
-                {
-                    isSafe = false;
-                }
+                if (rand() % 4 == 0)
+                    direction = UP;
                 else
-                {
-                    ++yPos;
-                    conditionDirection |= RIGHT;
-                }
+                    direction = DOWN;
+
                 break;
 
             case LEFT:
-                if (yPos <= 0)
-                    isSafe = false;
+                if (rand() % 4 == 0)
+                    direction = UP;
                 else
-                {
-                    --yPos;
-                    conditionDirection |= LEFT;
-                }
+                    direction = DOWN;
+
                 break;
 
             case UP:
-                if (xPos <= 0)
-                    isSafe = false;
+                if (rand() % 4 == 0)
+                    direction = LEFT;
                 else
-                {
-                    --xPos;
-                    conditionDirection |= UP;
-                }
+                    direction = RIGHT;
                 break;
 
             case DOWN:
-                if (xPos >= 29)
-                {
-                    isSafe = false;
-                }
+                if (rand() % 4 == 0)
+                    direction = LEFT;
                 else
-                {
-                    ++xPos;
-                    conditionDirection |= DOWN;
-                }
+                    direction = RIGHT;
                 break;
             }
+        }
 
-            if (rand() % 5 == 0 || conditionCount == 7 || !isSafe)
+        switch (direction)
+        {
+        case RIGHT:
+            if (yPos + 1 >= 30)
             {
-                switch (direction)
+                switch (lastDirection)
                 {
                 case RIGHT:
-                    if (!isSafe)
-                    {
-                        if (board[xPos][yPos - 1] == 0)
-                            direction = LEFT;
-                        else if (board[xPos + 1][yPos] == 0)
-                            direction = DOWN;
-                        else if (board[xPos - 1][yPos] == 0)
-                            direction = UP;
-                    }
-                    if (rand() % 4 == 0)
-                    {
-                        if (board[xPos - 1][yPos] != 0)
-                            direction = DOWN;
-                        else
-                            direction = UP;
-                    }
-                    else
-                    {
-                        if (board[xPos + 1][yPos] != 0)
-                            direction = UP;
-                        else
-                            direction = DOWN;
-                    }
+                    direction = DOWN;
                     break;
-
-                case LEFT:
-                    if (!isSafe)
-                    {
-                        if (board[xPos][yPos + 1] == 0)
-                            direction = RIGHT;
-                        else if (board[xPos + 1][yPos] == 0)
-                            direction = DOWN;
-                        else if (board[xPos - 1][yPos] == 0)
-                            direction = UP;
-                    }
-                    if (rand() % 4 == 0)
-                    {
-                        if (board[xPos - 1][yPos] != 0)
-                            direction = DOWN;
-                        else
-                            direction = UP;
-                    }
-                    else
-                    {
-                        if (board[xPos + 1][yPos] != 0)
-                            direction = UP;
-                        else
-                            direction = DOWN;
-                    }
-                    break;
-
-                case UP:
-                    if (!isSafe)
-                    {
-                        if (board[xPos - 1][yPos] == 0)
-                            direction = DOWN;
-                        else if (board[xPos][yPos + 1] == 0)
-                            direction = RIGHT;
-                        else if (board[xPos][yPos - 1] == 0)
-                            direction = LEFT;
-                    }
-                    if (rand() % 4 == 0)
-                    {
-                        if (board[xPos][yPos - 1] != 0)
-                            direction = RIGHT;
-                        else
-                            direction = LEFT;
-                    }
-                    else
-                    {
-                        if (board[xPos][yPos + 1] != 0)
-                            direction = LEFT;
-                        else
-                            direction = RIGHT;
-                    }
-                    break;
-
                 case DOWN:
-                    if (!isSafe)
-                    {
-                        if (board[xPos - 1][yPos] == 0)
-                            direction = UP;
-                        else if (board[xPos][yPos + 1] == 0)
-                            direction = LEFT;
-                        else if (board[xPos][yPos - 1] == 0)
-                            direction = RIGHT;
-                    }
-                    if (rand() % 4 == 0)
-                    {
-                        if (board[xPos][yPos - 1] != 0)
-                            direction = RIGHT;
-                        else
-                            direction = LEFT;
-                    }
-                    else
-                    {
-                        if (board[xPos][yPos + 1] != 0)
-                            direction = LEFT;
-                        else
-                            direction = RIGHT;
-                    }
+                case UP:
+                    direction = LEFT;
                     break;
                 }
             }
-        } while (!isSafe);
+            break;
+        case LEFT:
+            if (yPos - 1 <= -1)
+            {
+                switch (lastDirection)
+                {
+                case LEFT:
+                    direction = DOWN;
+                    break;
+                case DOWN:
+                case UP:
+                    direction = RIGHT;
+                    break;
+                }
+            }
+            break;
+        case UP:
+            if (xPos - 1 <= -1)
+            {
+                switch (lastDirection)
+                {
+                case RIGHT:
+                case LEFT:
+                    direction = DOWN;
+                    break;
+                case UP:
+                    direction = RIGHT;
+                    break;
+                }
+            }
+            break;
+        case DOWN:
+            if (xPos + 1 >= 30)
+            {
+                switch (lastDirection)
+                {
+                case RIGHT:
+                case LEFT:
+                    direction = UP;
+                    break;
+                case DOWN:
+                    direction = RIGHT;
+                    break;
+                }
+            }
+            break;
+        }
+
+        if (conditionCount == 7)
+            conditionCount = 0;
+    }
+}
+
+void boardMoveRight()
+{
+    for (int i = 0; i < 30; ++i)
+    {
+        board[i].push_front(board[i].back());
+        board[i].pop_back();
+    }
+}
+
+void boardMoveLeft()
+{
+    for (int i = 0; i < 30; ++i)
+    {
+        board[i].push_back(board[i].front());
+        board[i].pop_front();
     }
 }
