@@ -1,4 +1,4 @@
-#define _CRT_SECURE_NO_WARNINGS
+﻿#define _CRT_SECURE_NO_WARNINGS
 
 #include <iostream>
 #include <random>
@@ -18,7 +18,7 @@ deque<int> board[30];
 
 void boardPrint();
 void boardInit();
-void boardMakeRoute();
+bool boardMakeRoute();
 
 void boardMoveRight();
 void boardMoveLeft();
@@ -39,7 +39,9 @@ int main()
         {
         case 'r':
             boardInit();
-            boardMakeRoute();
+            do
+            {
+            } while (!boardMakeRoute());
             boardPrint();
             break;
         case 'a': // move route left
@@ -78,7 +80,7 @@ void boardInit()
         }
 }
 
-void boardMakeRoute()
+bool boardMakeRoute()
 {
     // 조건 1 : 한 방향으로 최대 8칸 이동
     // 조건 2 : 경로를 좌우상하로 최소 한 번 이동
@@ -130,7 +132,7 @@ void boardMakeRoute()
 
         if (xPos < 0 || xPos > 29 || yPos < 0 || yPos > 29)
         {
-            return;
+            return false;
         }
 
         board[xPos][yPos] = ++count;
@@ -217,7 +219,10 @@ void boardMakeRoute()
                     direction = DOWN;
                     break;
                 case UP:
-                    direction = RIGHT;
+                    if (yPos + 1 >= 30)
+                        direction = LEFT;
+                    else
+                        direction = RIGHT;
                     break;
                 }
             }
