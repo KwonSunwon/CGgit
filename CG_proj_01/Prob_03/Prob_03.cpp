@@ -4,11 +4,8 @@
 #include <gl/freeglut.h>
 #include <gl/freeglut_ext.h>
 
-// ramdom number generator
-std::random_device rd;
-std::mt19937 gen(rd());
-std::uniform_real_distribution<> randomuf(0.0, 1.0);
-std::uniform_real_distribution<> randomf(-1.0, 1.0);
+#define WINDOW_WIDTH 800
+#define WINDOW_HEIGHT 600
 
 typedef struct _Rect
 {
@@ -19,24 +16,39 @@ typedef struct _Rect
     bool isSelected;
 } _Rect;
 
+typedef struct _POINT
+{
+    float x;
+    float y;
+} _POINT;
+
+std::random_device rd;
+std::mt19937 gen(rd());
+std::uniform_real_distribution<> randomuf(0.0, 1.0);
+std::uniform_real_distribution<> randomf(-1.0, 1.0);
+
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
 GLvoid Keyboard(unsigned char key, int x, int y);
 GLvoid Mouse(int button, int state, int x, int y);
 GLvoid Motion(int x, int y);
 
-GLclampf g_color[4] = {0.0, 0.0, 0.0, 1.0};
-
-float convertToGLCoord(const int value);
-
-bool checkClickRect(const float x, const float y, const int idx);
+_POINT convertToGLCoord(const _POINT value);
 
 void makeRect();
-void seletRect(const float x, const float y);
-void moveRect();
+void seletRect(const _POINT glCoord);
+bool checkClickRect(const _POINT glCoord, const int idx);
+void moveRect(const _POINT glCoord);
 void disableSelectRect();
 
+int windowWidth = WINDOW_WIDTH;
+int windowHeight = WINDOW_HEIGHT;
+GLclampf g_color[4] = {0.0, 0.0, 0.0, 1.0};
+
+bool isMouseDown = false;
+
 _Rect g_rect[5];
+_Rect g_temp;
 int g_rectCnt = 0;
 
 void main(int argc, char **argv)
@@ -44,7 +56,7 @@ void main(int argc, char **argv)
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
     glutInitWindowPosition(100, 100);
-    glutInitWindowSize(1000, 1000);
+    glutInitWindowSize(windowWidth, windowHeight);
     glutCreateWindow("Example1");
     glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK)
@@ -97,19 +109,27 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 
 GLvoid Mouse(int button, int state, int x, int y)
 {
-    float glx = convertToGLCoord(x);
-    float gly = convertToGLCoord(y);
-    std::cout << glx << " " << gly << std::endl;
+    _POINT glmouseCoord = convertToGLCoord({(float)x, (float)y});
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
     {
-        std::cout << "Left Button Down" << std::endl;
-        seletRect(x, y);
+        isMouseDown = true;
+        seletRect(glmouseCoord);
+    }
+    else if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
+    {
+        isMouseDown = false;
+        disableSelectRect();
     }
     glutPostRedisplay();
 }
 
 GLvoid Motion(int x, int y)
 {
+    _POINT glMouseCoord = convertToGLCoord({(float)x, (float)y});
+    if (isMouseDown)
+    {
+        moveRect(glMouseCoord);
+    }
     glutPostRedisplay();
 }
 
@@ -133,29 +153,26 @@ void makeRect()
     }
 }
 
-void seletRect(const float x, const float y)
+void seletRect(const _POINT glCoord)
 {
     for (int i = g_rectCnt - 1; i > -1; --i)
     {
         std::cout << "checking " << i << std::endl;
-        if (checkClickRect(x, y, i))
+        if (checkClickRect(glCoord, i))
         {
             g_rect[i].isSelected = true;
             std::cout << "Rect " << i << " is selected" << std::endl;
+            g_temp = g_rect[i];
             return;
-        }
-        else
-        {
-            g_rect[i].isSelected = false;
         }
     }
 }
 
-bool checkClickRect(const float x, const float y, const int idx)
+bool checkClickRect(const _POINT glCoord, const int idx)
 {
-    std::cout << "checking in click " << idx << std::endl;
-    if (x >= g_rect[idx].x && y >= g_rect[idx].y)
-        if (x <= g_rect[idx].x + g_rect[idx].size && y <= g_rect[idx].y + g_rect[idx].size)
+    std::cout << "x : " << glCoord.x << " y : " << glCoord.y << std::endl;
+    if (glCoord.x >= g_rect[idx].x && glCoord.y >= g_rect[idx].y)
+        if (glCoord.x <= g_rect[idx].x + g_rect[idx].size && glCoord.y <= g_rect[idx].y + g_rect[idx].size)
             return true;
     return false;
 }
@@ -168,10 +185,32 @@ void disableSelectRect()
     }
 }
 
-float convertToGLCoord(const int value)
+_POINT convertToGLCoord(const _POINT value)
 {
-    if (value <= 500)
-        return 1.0f - (float)value / 500.0f;
+    _POINT glCoord;
+
+    if (value.x <= windowWidth / 2)
+        glCoord.x = -(1.0f - value.x / (windowWidth / 2));
     else
-        return (float)value / 500.0f - 1.0f;
+        glCoord.x = value.x / (windowWidth / 2) - 1.0f;
+
+    if (value.y <= windowHeight / 2)
+        glCoord.y = 1.0f - value.y / (windowHeight / 2);
+    else
+        glCoord.y = -(value.y / (windowHeight / 2) - 1.0f);
+
+    return glCoord;
+}
+
+void moveRect(_POINT glCoord)
+{
+    for (int i = 0; i < g_rectCnt; ++i)
+    {
+        if (g_rect[i].isSelected)
+        {
+            g_rect[i].x = glCoord.x - g_temp.size / 2;
+            g_rect[i].y = glCoord.y - g_temp.size / 2;
+            return;
+        }
+    }
 }
