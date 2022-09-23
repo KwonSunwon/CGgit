@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <random>
 
 #include <gl/glew.h> //--- 필요한 헤더파일 include
@@ -9,7 +9,7 @@ GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
 GLvoid Keyboard(unsigned char key, int x, int y);
 
-GLclampf g_color[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+GLclampf g_color[4] = {1.0f, 1.0f, 1.0f, 1.0f};
 bool g_colorChagneTimer = false;
 
 std::random_device rd;
@@ -24,7 +24,7 @@ void main(int argc, char **argv) //--- 윈도우 출력하고 콜백함수 설�
     glutInit(&argc, argv);                        // glut 초기화
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA); // 디스플레이 모드 설정
     glutInitWindowPosition(100, 100);             // 윈도우의 위치 지정
-    glutInitWindowSize(250, 250);                 // 윈도우의 크기 지정
+    glutInitWindowSize(800, 600);                 // 윈도우의 크기 지정
     glutCreateWindow("Example1");                 // 윈도우 생성
 
     //--- GLEW 초기화하기
