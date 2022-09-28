@@ -4,8 +4,20 @@
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
 
+GLvoid initBuffer();
+
 GLuint shaderID;
 
+GLuint VBO;
+GLuint VAO;
+
+const float vertexPosition[] = {
+    -0.5f, -0.5f, 0.0f,
+    0.5f, -0.5f, 0.0f,
+    0.0f, 0.5f, 0.0f};
+
+GLint windowWidth = 800;
+GLint windowHeight = 800;
 GLclampf g_color[4] = {1.0f, 1.0f, 1.0f, 1.0f};
 
 void main(int argc, char **argv)
@@ -13,7 +25,7 @@ void main(int argc, char **argv)
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
     glutInitWindowPosition(100, 100);
-    glutInitWindowSize(800, 600);
+    glutInitWindowSize(windowWidth, windowHeight);
     glutCreateWindow("Example1");
     glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK)
@@ -23,6 +35,8 @@ void main(int argc, char **argv)
     }
     else
         std::cout << "GLEW Initialized" << std::endl;
+
+    initBuffer();
 
     makeVertexShaders();
     makeFragmentShaders();
@@ -40,8 +54,8 @@ GLvoid drawScene()
 
     glUseProgram(shaderID);
 
-    glPointSize(5.0f);
-    glDrawArrays(GL_POINTS, 0, 1);
+    glBindVertexArray(VAO);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
 
     glutSwapBuffers();
 }
@@ -49,4 +63,19 @@ GLvoid drawScene()
 GLvoid Reshape(int w, int h)
 {
     glViewport(0, 0, w, h);
+}
+
+GLvoid initBuffer()
+{
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexPosition), vertexPosition, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid *)0);
+    glEnableVertexAttribArray(0);
 }
