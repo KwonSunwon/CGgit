@@ -5,6 +5,7 @@
 std::random_device rd;
 std::mt19937 gen(rd());
 std::uniform_real_distribution<> colorUf(0.0, 1.0);
+std::uniform_real_distribution<> randi(0, 3);
 
 // convert window coordinates to OpenGL coordinates
 struct Point
@@ -25,7 +26,9 @@ struct Triangle
 {
     GLfloat position[2];
     GLfloat scale;
+    GLfloat rotate;
     GLfloat color[9];
+    int direction;
 };
 
 GLvoid drawScene(GLvoid);
@@ -53,14 +56,17 @@ GLint windowHeight = 800;
 GLclampf g_color[4] = {1.0f, 1.0f, 1.0f, 1.0f};
 
 Triangle triangle[4];
-int triangleIdx = -1;
+int triangleIdx = 0;
+int triangleCnt = 0;
 bool scaleUp = true;
 float scaleValue = 1.0f;
 
 bool isLine = false;
 
-void initTriangle();
 void makeTriangle(Point glCoord);
+void moveTriangle();
+int isCollisionToWall(const Triangle tri);
+void moveTimer(int value);
 
 void main(int argc, char **argv)
 {
@@ -78,7 +84,7 @@ void main(int argc, char **argv)
     else
         std::cout << "GLEW Initialized" << std::endl;
 
-    initTriangle();
+    glutTimerFunc(50, moveTimer, 1);
 
     glutKeyboardFunc(keyboard);
     glutMouseFunc(mouse);
@@ -92,7 +98,7 @@ GLvoid drawScene()
     glClearColor(g_color[0], g_color[1], g_color[2], g_color[3]);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < triangleCnt; i++)
     {
         for (int j = 0; j < 9; ++j)
         {
@@ -105,6 +111,7 @@ GLvoid drawScene()
         mat4 model = mat4(1.0f);
 
         model = translate(model, vec3(triangle[i].position[0], triangle[i].position[1], 0.0f));
+        model = rotate(model, radians(triangle[i].rotate), vec3(0.0f, 0.0f, 1.0f));
         model = scale(model, vec3(triangle[i].scale, triangle[i].scale, triangle[i].scale));
 
         GLuint modelLoc = glGetUniformLocation(shaderID, "modelTransform");
@@ -173,33 +180,8 @@ GLvoid mouse(int button, int state, int x, int y)
     glutPostRedisplay();
 }
 
-void initTriangle()
-{
-    for (int i = 0; i < 4; ++i)
-    {
-        triangle[i].color[0] = triangle[i].color[3] = triangle[i].color[6] = colorUf(gen);
-        triangle[i].color[1] = triangle[i].color[4] = triangle[i].color[7] = colorUf(gen);
-        triangle[i].color[2] = triangle[i].color[5] = triangle[i].color[8] = colorUf(gen);
-        triangle[i].scale = 1.f;
-    }
-
-    triangle[0].position[0] = -0.5f;
-    triangle[0].position[1] = 0.5f;
-
-    triangle[1].position[0] = 0.5f;
-    triangle[1].position[1] = 0.5f;
-
-    triangle[2].position[0] = -0.5f;
-    triangle[2].position[1] = -0.5f;
-
-    triangle[3].position[0] = 0.5f;
-    triangle[3].position[1] = -0.5f;
-}
-
 void makeTriangle(Point glCoord)
 {
-    triangleIdx = (triangleIdx + 1) % 4;
-
     triangle[triangleIdx].position[0] = glCoord.x;
     triangle[triangleIdx].position[1] = glCoord.y;
 
@@ -220,4 +202,108 @@ void makeTriangle(Point glCoord)
     triangle[triangleIdx].color[0] = triangle[triangleIdx].color[3] = triangle[triangleIdx].color[6] = colorUf(gen);
     triangle[triangleIdx].color[1] = triangle[triangleIdx].color[4] = triangle[triangleIdx].color[7] = colorUf(gen);
     triangle[triangleIdx].color[2] = triangle[triangleIdx].color[5] = triangle[triangleIdx].color[8] = colorUf(gen);
+
+    triangle[triangleIdx].direction = randi(gen);
+    triangle[triangleIdx].rotate = 0;
+
+    if (triangleCnt < 4)
+        triangleCnt++;
+    triangleIdx = (triangleIdx + 1) % 4;
+}
+
+void moveTriangle()
+{
+    for (int i = 0; i < triangleCnt; i++)
+    {
+        switch (triangle[i].direction)
+        {
+        case LEFT_TOP:
+            triangle[i].position[0] -= 0.01f;
+            triangle[i].position[1] += 0.01f;
+            switch (isCollisionToWall(triangle[i]))
+            {
+            case LEFT:
+                triangle[i].direction = RIGHT_TOP;
+                triangle[i].rotate = 270;
+                break;
+            case TOP:
+                triangle[i].direction = LEFT_BOTTOM;
+                triangle[i].rotate = 180;
+                break;
+            }
+            break;
+
+        case RIGHT_TOP:
+            triangle[i].position[0] += 0.01f;
+            triangle[i].position[1] += 0.01f;
+            switch (isCollisionToWall(triangle[i]))
+            {
+            case RIGHT:
+                triangle[i].direction = LEFT_TOP;
+                triangle[i].rotate = 90;
+                break;
+            case TOP:
+                triangle[i].direction = RIGHT_BOTTOM;
+                triangle[i].rotate = 180;
+                break;
+            }
+            break;
+
+        case LEFT_BOTTOM:
+            triangle[i].position[0] -= 0.01f;
+            triangle[i].position[1] -= 0.01f;
+            switch (isCollisionToWall(triangle[i]))
+            {
+            case LEFT:
+                triangle[i].direction = RIGHT_BOTTOM;
+                triangle[i].rotate = 270;
+                break;
+            case BOTTOM:
+                triangle[i].direction = LEFT_TOP;
+                triangle[i].rotate = 0;
+                break;
+            }
+            break;
+
+        case RIGHT_BOTTOM:
+            triangle[i].position[0] += 0.01f;
+            triangle[i].position[1] -= 0.01f;
+            switch (isCollisionToWall(triangle[i]))
+            {
+            case RIGHT:
+                triangle[i].direction = LEFT_BOTTOM;
+                triangle[i].rotate = 90;
+                break;
+            case BOTTOM:
+                triangle[i].direction = RIGHT_TOP;
+                triangle[i].rotate = 0;
+                break;
+            }
+            break;
+        }
+    }
+}
+
+int isCollisionToWall(const Triangle tri)
+{
+    if (tri.position[0] < -1.f)
+        return LEFT;
+    else if (tri.position[0] > 1.f)
+        return RIGHT;
+    else if (tri.position[1] < -1.f)
+        return BOTTOM;
+    else if (tri.position[1] > 1.f)
+        return TOP;
+    else
+        return -1;
+}
+
+void moveTimer(int value)
+{
+    if (true)
+    {
+        moveTriangle();
+        glutTimerFunc(20, moveTimer, 1);
+    }
+    glutPostRedisplay();
 }

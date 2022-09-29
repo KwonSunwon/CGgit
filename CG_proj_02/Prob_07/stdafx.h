@@ -16,5 +16,15 @@
 #include <gl/glm/ext.hpp>
 #include <gl/glm/gtc/matrix_transform.hpp>
 
+#define LEFT_TOP 0
+#define RIGHT_TOP 1
+#define LEFT_BOTTOM 2
+#define RIGHT_BOTTOM 3
+
+#define LEFT 10
+#define RIGHT 11
+#define TOP 12
+#define BOTTOM 13
+
 using namespace std;
 using namespace glm;
