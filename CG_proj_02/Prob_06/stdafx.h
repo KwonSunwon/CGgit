@@ -1,3 +1,6 @@
+#pragma comment(lib, "glew32.lib")
+#pragma comment(lib, "freeglut.lib ")
+
 #pragma once
 #pragma warning(disable : 4996)
 
@@ -7,3 +10,11 @@
 #include <gl/freeglut_ext.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <random>
+
+#include <gl/glm/glm.hpp>
+#include <gl/glm/ext.hpp>
+#include <gl/glm/gtc/matrix_transform.hpp>
+
+using namespace std;
+using namespace glm;

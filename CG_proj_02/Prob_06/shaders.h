@@ -2,6 +2,6 @@
 
 void makeVertexShaders();
 void makeFragmentShaders();
-GLuint makeShaderProgram();
+GLuint initShader();
 
 char *fileToBuf(char *fileName);

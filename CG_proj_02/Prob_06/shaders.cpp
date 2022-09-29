@@ -49,8 +49,11 @@ void makeFragmentShaders()
     }
 }
 
-GLuint makeShaderProgram()
+GLuint initShader()
 {
+    makeVertexShaders();
+    makeFragmentShaders();
+
     GLuint ShaderProgramID;
     ShaderProgramID = glCreateProgram();
 
