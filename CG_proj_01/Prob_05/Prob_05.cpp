@@ -1,3 +1,6 @@
+#pragma comment (lib, "glew32.lib")
+#pragma comment (lib, "freeglut.lib ")
+
 #include <iostream>
 #include <gl/glew.h>
 #include <gl/freeglut.h>
