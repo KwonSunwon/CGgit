@@ -42,9 +42,9 @@ GLuint VBO_color;
 GLuint VAO;
 
 const float vertexPosition[] = {
-    0.0, 0.35, 0.0,
-    0.3, -0.25, 0.0,
-    -0.3, -0.25, 0.0};
+    0.0, 0.4, 0.0,
+    0.3, -0.2f, 0.0,
+    -0.3, -0.2f, 0.0};
 
 float vertexColor[9];
 
@@ -104,8 +104,8 @@ GLvoid drawScene()
 
         mat4 model = mat4(1.0f);
 
-        model = scale(model, vec3(triangle[i].scale, triangle[i].scale, triangle[i].scale));
         model = translate(model, vec3(triangle[i].position[0], triangle[i].position[1], 0.0f));
+        model = scale(model, vec3(triangle[i].scale, triangle[i].scale, triangle[i].scale));
 
         GLuint modelLoc = glGetUniformLocation(shaderID, "modelTransform");
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, value_ptr(model));
