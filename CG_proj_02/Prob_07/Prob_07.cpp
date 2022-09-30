@@ -60,6 +60,7 @@ int triangleIdx = 0;
 int triangleCnt = 0;
 bool scaleUp = true;
 float scaleValue = 1.0f;
+bool isMove = true;
 
 bool isLine = false;
 
@@ -84,6 +85,8 @@ void main(int argc, char **argv)
     else
         std::cout << "GLEW Initialized" << std::endl;
 
+    shaderID = initShader();
+
     glutTimerFunc(50, moveTimer, 1);
 
     glutKeyboardFunc(keyboard);
@@ -105,7 +108,6 @@ GLvoid drawScene()
             vertexColor[j] = triangle[i].color[j];
         }
 
-        shaderID = initShader();
         initBuffer();
 
         mat4 model = mat4(1.0f);
@@ -161,6 +163,10 @@ GLvoid keyboard(unsigned char key, int x, int y)
     {
     case 'a':
         isLine = !isLine;
+        break;
+    case 's':
+        isMove = !isMove;
+        glutTimerFunc(50, moveTimer, 1);
         break;
     case 'q':
         exit(0);
@@ -300,7 +306,7 @@ int isCollisionToWall(const Triangle tri)
 
 void moveTimer(int value)
 {
-    if (true)
+    if (isMove)
     {
         moveTriangle();
         glutTimerFunc(20, moveTimer, 1);
