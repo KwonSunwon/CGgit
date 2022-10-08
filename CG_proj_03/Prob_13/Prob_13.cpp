@@ -314,7 +314,15 @@ void drawCube(int mode)
     model = glm::rotate(model, glm::radians(yAxisTheta), glm::vec3(0.0f, 1.0f, 0.0f));
     model = glm::scale(model, glm::vec3(1.f, 1.f, 1.f));
 
+    glm::mat4 view = glm::mat4(1.f);
+    view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+    glm::mat4 projection = glm::mat4(1.f);
+    projection = glm::perspective(glm::radians(45.f), 1.f, 0.1f, 100.f);
+
     glUniformMatrix4fv(glGetUniformLocation(ShaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(glGetUniformLocation(ShaderProgramID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(glGetUniformLocation(ShaderProgramID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
     glBindVertexArray(VAO);
     if (mode == SOLID)
@@ -345,7 +353,16 @@ void initCoordBuffer()
 void drawCoord()
 {
     model = glm::mat4(1.f);
+
+    glm::mat4 view = glm::mat4(1.f);
+    view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+    glm::mat4 projection = glm::mat4(1.f);
+    projection = glm::perspective(glm::radians(45.f), 1.f, 0.1f, 100.f);
+
     glUniformMatrix4fv(glGetUniformLocation(ShaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(glGetUniformLocation(ShaderProgramID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(glGetUniformLocation(ShaderProgramID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
     glBindVertexArray(VAO_coord);
     glDrawArrays(GL_LINES, 0, 4);
@@ -381,7 +398,15 @@ void drawPyramid(int mode)
     model = glm::rotate(model, glm::radians(yAxisTheta), glm::vec3(0.0f, 1.0f, 0.0f));
     model = glm::scale(model, glm::vec3(1.f, 1.f, 1.f));
 
+    glm::mat4 view = glm::mat4(1.f);
+    view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+    glm::mat4 projection = glm::mat4(1.f);
+    projection = glm::perspective(glm::radians(45.f), 1.f, 0.1f, 100.f);
+
     glUniformMatrix4fv(glGetUniformLocation(ShaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(glGetUniformLocation(ShaderProgramID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(glGetUniformLocation(ShaderProgramID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
     glBindVertexArray(VAO_pyramid);
     if (mode == SOLID)
