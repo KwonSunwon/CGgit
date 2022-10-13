@@ -140,6 +140,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="fragment.frag" />
+    <None Include="glu_obj.frag" />
+    <None Include="glu_obj.vert" />
     <None Include="vertex.vert" />
   </ItemGroup>
   <ItemGroup>

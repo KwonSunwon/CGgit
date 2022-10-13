@@ -21,6 +21,12 @@
     <None Include="vertex.vert">
       <Filter>리소스 파일</Filter>
     </None>
+    <None Include="glu_obj.frag">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="glu_obj.vert">
+      <Filter>리소스 파일</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Prob_14.cpp">
