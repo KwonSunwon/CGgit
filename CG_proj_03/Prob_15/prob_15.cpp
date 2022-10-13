@@ -1,5 +1,5 @@
-#include "stdafx.h"
 #include "shaders.h"
+#include "stdafx.h"
 
 #define SET1 1
 #define SET2 2
@@ -7,10 +7,16 @@
 #define CCW -1.f
 #define CW 1.f
 
+#define R_CLOSE_CENTER 0b00000001
+#define R_AWAY_CENTER 0b00000010
+#define L_CLOSE_CENTER 0b00000100
+#define L_AWAY_CENTER 0b00001000
+
 // gl functions
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
 GLvoid keyboard(unsigned char key, int x, int y);
+GLvoid specialKeys(int key, int x, int y);
 
 // gl variables
 GLclampf g_color[4] = {0.3f, 0.3f, 0.3f, 1.f};
@@ -38,32 +44,14 @@ void initCubeBuffer();
 void initCoordBuffer();
 
 // coordinate
-const GLfloat coord[] = {
-    -1.f, 0.0f, 0.0f,
-    1.f, 0.0f, 0.0f,
-    0.0f, 0.0f, -1.f,
-    0.0f, 0.0f, 1.f,
-    0.0f, -1.f, 0.0f,
-    0.0f, 1.f, 0.0f};
-const float coordColor[] = {
-    1.f, 0.f, 0.f,
-    1.f, 0.f, 0.f,
-    0.f, 1.f, 0.f,
-    0.f, 1.f, 0.f,
-    0.f, 0.f, 1.f,
-    0.f, 0.f, 1.f};
+const GLfloat coord[] = {-1.f, 0.0f, 0.0f, 1.f, 0.0f, 0.0f, 0.0f, 0.0f, -1.f,
+                         0.0f, 0.0f, 1.f, 0.0f, -1.f, 0.0f, 0.0f, 1.f, 0.0f};
+const float coordColor[] = {1.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 1.f, 0.f,
+                            0.f, 1.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 1.f};
 
 // cube model
-float cube[] = {
-    -0.5f, 0.5f, -0.5f,
-    -0.5f, -0.5f, -0.5f,
-    0.5f, -0.5f, -0.5f,
-    0.5f, 0.5f, -0.5f,
-
-    0.5f, 0.5f, 0.5f,
-    0.5f, -0.5f, 0.5f,
-    -0.5f, -0.5f, 0.5f,
-    -0.5f, 0.5f, 0.5f};
+float cube[] = {-0.5f, 0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f, 0.5f, -0.5f,
+                0.5f, 0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f};
 GLubyte cubeIdx[] = {
     0, 1, 2, 0, 2, 3, // front
     4, 5, 6, 4, 6, 7, // back
@@ -72,15 +60,8 @@ GLubyte cubeIdx[] = {
     7, 0, 3, 7, 3, 4, // top
     1, 6, 5, 1, 5, 2, // bottom
 };
-float cubeColor[] = {
-    1.0f, 0.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
-    0.0f, 1.0f, 0.0f,
-    0.0f, 1.0f, 1.0f,
-    0.0f, 0.0f, 1.0f,
-    1.0f, 0.0f, 1.0f,
-    1.0f, 0.0f, 0.0f,
-    1.0f, 1.0f, 0.0f};
+float cubeColor[] = {1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+                     0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f};
 
 // functions
 void drawCoord();
@@ -99,10 +80,31 @@ void yAxisRevolutionTimer(int value);
 
 void init();
 
+// animations
+void makeSpiral();
+void spiralAnimationTimer(int value);
+void patrolAnimationTimer(int value);
+void changeAnimationTimer(int value);
+
+// animation variables
+bool isSpiralAnimation = false;
+bool isPatrolAnimation = false;
+bool isChangeAnimation = false;
+
 // variables
 int selected = SET1;
-float cx = 0.5f;
-float cy = 0.2f;
+
+float rx = 0.5f;
+float ry = 0.2f;
+float rz = 0.0f;
+float rSize = 0.3f;
+float rSizeFromCenter = 1.0f;
+
+float lx = -0.5f;
+float ly = 0.2f;
+float lz = 0.0f;
+float lSize = 0.3f;
+float lSizeFromCenter = 1.0f;
 
 float xAxisThetaRight = 0.f;
 float yAxisThetaRight = 0.f;
@@ -151,6 +153,7 @@ void main(int argc, char **argv)
     initBuffer();
 
     glutKeyboardFunc(keyboard);
+    glutSpecialFunc(specialKeys);
 
     glutDisplayFunc(drawScene);
     glutReshapeFunc(Reshape);
@@ -177,62 +180,59 @@ GLvoid drawScene()
     glutSwapBuffers();
 }
 
-GLvoid Reshape(int w, int h)
-{
-    glViewport(0, 0, w, h);
-}
+GLvoid Reshape(int w, int h) { glViewport(0, 0, w, h); }
 
 GLvoid keyboard(unsigned char key, int x, int y)
 {
     switch (key)
     {
     // change object
-    case 'c':
+    case 'o':
         if (selected == SET1)
             selected = SET2;
         else
             selected = SET1;
         break;
 
-    case 'x': // CW x-axis rotation for right object
+    case 'z': // CW x-axis rotation for right object
         xAxisRotationRight = !xAxisRotationRight;
         if (xAxisRotationRight)
             glutTimerFunc(50, xAxisRotationRightTimer, CW);
         break;
-    case 'X': // CCW x-axis rotation for right object
+    case 'Z': // CCW x-axis rotation for right object
         xAxisRotationRight = !xAxisRotationRight;
         if (xAxisRotationRight)
             glutTimerFunc(50, xAxisRotationRightTimer, CCW);
         break;
 
-    case 'y': // CW y-axis rotation for right object
+    case 'x': // CW y-axis rotation for right object
         yAxisRotationRight = !yAxisRotationRight;
         if (yAxisRotationRight)
             glutTimerFunc(50, yAxisRotationRightTimer, CW);
         break;
-    case 'Y': // CCW y-axis rotation for right object
+    case 'X': // CCW y-axis rotation for right object
         yAxisRotationRight = !yAxisRotationRight;
         if (yAxisRotationRight)
             glutTimerFunc(50, yAxisRotationRightTimer, CCW);
         break;
 
-    case 'a': // CW x-axis rotation for left object
+    case 'n': // CW x-axis rotation for left object
         xAxisRotationLeft = !xAxisRotationLeft;
         if (xAxisRotationLeft)
             glutTimerFunc(50, xAxisRotationLeftTimer, CW);
         break;
-    case 'A': // CCW x-axis rotation for left object
+    case 'N': // CCW x-axis rotation for left object
         xAxisRotationLeft = !xAxisRotationLeft;
         if (xAxisRotationLeft)
             glutTimerFunc(50, xAxisRotationLeftTimer, CCW);
         break;
 
-    case 'b': // CW y-axis rotation for left object
+    case 'm': // CW y-axis rotation for left object
         yAxisRotationLeft = !yAxisRotationLeft;
         if (yAxisRotationLeft)
             glutTimerFunc(50, yAxisRotationLeftTimer, CW);
         break;
-    case 'B': // CCW y-axis rotation for left object
+    case 'M': // CCW y-axis rotation for left object
         yAxisRotationLeft = !yAxisRotationLeft;
         if (yAxisRotationLeft)
             glutTimerFunc(50, yAxisRotationLeftTimer, CCW);
@@ -249,14 +249,122 @@ GLvoid keyboard(unsigned char key, int x, int y)
             glutTimerFunc(50, yAxisRevolutionTimer, CCW);
         break;
 
-
-    case 's': // reset
-        init();
+    case '1': // make spiral and move object following spiral
+        break;
+    case '2': // move object to center and far away from center
+        isPatrolAnimation = !isPatrolAnimation;
+        if (isPatrolAnimation)
+            glutTimerFunc(50, patrolAnimationTimer, 0);
+        break;
+    case '3': // both object move to each other's position
         break;
 
-    case 'Q':
-    case 'q':
+    // l-object
+    // move
+    case 'w': // positive z-axis
+        lz += 0.01f;
+        break;
+    case 's': // negative z-axis
+        lz -= 0.01f;
+        break;
+    case 'a': // negative x-axis
+        lx -= 0.01f;
+        break;
+    case 'd': // positive x-axis
+        lx += 0.01f;
+        break;
+    case 'q': // positive y-axis
+        ly += 0.01f;
+        break;
+    case 'e': // negative y-axis
+        ly -= 0.01f;
+        break;
+
+    // scaling
+    case 'f':
+        lSize += 0.01f;
+        break;
+    case 'g':
+        lSize -= 0.01f;
+        break;
+
+    // scaling from center
+    case 'F':
+        lSizeFromCenter += 0.01f;
+        break;
+    case 'G':
+        lSizeFromCenter -= 0.01f;
+        break;
+
+    // r-object
+    // scaling
+    case '.':
+        rSize += 0.01f;
+        break;
+    case '/':
+        rSize -= 0.01f;
+        break;
+
+    // scaling from center
+    case '>':
+        rSizeFromCenter += 0.01f;
+        break;
+    case '?':
+        rSizeFromCenter -= 0.01f;
+        break;
+
+    // both
+    // move
+    case 'i': // negative z-axis
+        rz += 0.01f;
+        lz += 0.01f;
+        break;
+    case 'k': // positive z-axis
+        rz -= 0.01f;
+        lz -= 0.01f;
+        break;
+    case 'j': // negative x-axis
+        rx -= 0.01f;
+        lx -= 0.01f;
+        break;
+    case 'l': // positive x-axis
+        rx += 0.01f;
+        lx += 0.01f;
+        break;
+
+        // case 's': // reset
+        //     init();
+        //     break;
+
+    case 0x1B: // ESC
         exit(0);
+        break;
+    }
+    glutPostRedisplay();
+}
+
+GLvoid specialKeys(int key, int x, int y)
+{
+    switch (key)
+    {
+    // r-object move
+    case GLUT_KEY_LEFT: // negative x-axis
+        rx -= 0.05f;
+        break;
+    case GLUT_KEY_RIGHT: // positive x-axis
+        rx += 0.05f;
+        break;
+    case GLUT_KEY_UP: // positive z-axis
+        rz += 0.05f;
+        break;
+    case GLUT_KEY_DOWN: // negative z-axis
+        rz -= 0.05f;
+        break;
+    case GLUT_KEY_PAGE_UP: // positive y-axis
+        ry += 0.05f;
+        break;
+    case GLUT_KEY_PAGE_DOWN: // negative y-axis
+        ry -= 0.05f;
         break;
     }
     glutPostRedisplay();
@@ -313,12 +421,15 @@ void drawCube()
     model = glm::mat4(1.f);
     model = glm::rotate(model, glm::radians(xAxisTheta), glm::vec3(1.f, 0.f, 0.f));
     model = glm::rotate(model, glm::radians(yAxisTheta), glm::vec3(0.f, 1.f, 0.f));
-    model = glm::translate(model, glm::vec3(cx, cy, 0.0f));
+    model = glm::scale(model, glm::vec3(rSizeFromCenter, rSizeFromCenter,
+                                        rSizeFromCenter)); // scaling from center
+    model = glm::translate(model, glm::vec3(rx, ry, rz));
     model = glm::rotate(model, glm::radians(xAxisThetaRight), glm::vec3(1.0f, 0.0f, 0.0f));
     model = glm::rotate(model, glm::radians(yAxisThetaRight), glm::vec3(0.0f, 1.0f, 0.0f));
-    model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
+    model = glm::scale(model, glm::vec3(rSize, rSize, rSize));
 
-    glUniformMatrix4fv(glGetUniformLocation(ShaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(glGetUniformLocation(ShaderProgramID, "model"), 1, GL_FALSE,
+                       glm::value_ptr(model));
 
     glBindVertexArray(VAO);
     // glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, (void *)0);
@@ -333,12 +444,15 @@ void drawSphere()
     model = glm::mat4(1.f);
     model = glm::rotate(model, glm::radians(xAxisTheta), glm::vec3(1.f, 0.f, 0.f));
     model = glm::rotate(model, glm::radians(yAxisTheta), glm::vec3(0.f, 1.f, 0.f));
-    model = glm::translate(model, glm::vec3(-cx, cy, 0.0f));
+    model = glm::scale(model, glm::vec3(lSizeFromCenter, lSizeFromCenter,
+                                        lSizeFromCenter)); // scaling from center
+    model = glm::translate(model, glm::vec3(lx, ly, lz));
     model = glm::rotate(model, glm::radians(xAxisThetaLeft), glm::vec3(1.0f, 0.0f, 0.0f));
     model = glm::rotate(model, glm::radians(yAxisThetaLeft), glm::vec3(0.0f, 1.0f, 0.0f));
-    model = glm::scale(model, glm::vec3(0.25f, 0.25f, 0.25f));
+    model = glm::scale(model, glm::vec3(lSize, lSize, lSize));
 
-    glUniformMatrix4fv(glGetUniformLocation(ShaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(glGetUniformLocation(ShaderProgramID, "model"), 1, GL_FALSE,
+                       glm::value_ptr(model));
 
     gluQuadricDrawStyle(sphere, GLU_LINE);
     gluSphere(sphere, 1.0, 20, 20);
@@ -370,7 +484,8 @@ void drawCoord()
     model = glm::rotate(model, glm::radians(xAxisTheta), glm::vec3(1.0f, 0.0f, 0.0f));
     model = glm::rotate(model, glm::radians(yAxisTheta), glm::vec3(0.0f, 1.0f, 0.0f));
     model = glm::scale(model, glm::vec3(0.9f, 0.9f, 0.9f));
-    glUniformMatrix4fv(glGetUniformLocation(ShaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(glGetUniformLocation(ShaderProgramID, "model"), 1, GL_FALSE,
+                       glm::value_ptr(model));
 
     glBindVertexArray(VAO_coord);
     glDrawArrays(GL_LINES, 0, 6);
@@ -383,12 +498,15 @@ void drawCylinder()
     model = glm::mat4(1.f);
     model = glm::rotate(model, glm::radians(xAxisTheta), glm::vec3(1.f, 0.f, 0.f));
     model = glm::rotate(model, glm::radians(yAxisTheta), glm::vec3(0.f, 1.f, 0.f));
-    model = glm::translate(model, glm::vec3(cx, cy, 0.0f));
+    model = glm::scale(model, glm::vec3(rSizeFromCenter, rSizeFromCenter,
+                                        rSizeFromCenter)); // scaling from center
+    model = glm::translate(model, glm::vec3(rx, ry, rz));
     model = glm::rotate(model, glm::radians(xAxisThetaRight), glm::vec3(1.0f, 0.0f, 0.0f));
     model = glm::rotate(model, glm::radians(yAxisThetaRight), glm::vec3(0.0f, 1.0f, 0.0f));
-    model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+    model = glm::scale(model, glm::vec3(rSize, rSize, rSize));
 
-    glUniformMatrix4fv(glGetUniformLocation(ShaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(glGetUniformLocation(ShaderProgramID, "model"), 1, GL_FALSE,
+                       glm::value_ptr(model));
 
     gluQuadricDrawStyle(cylinder, GLU_LINE);
     gluCylinder(cylinder, 1.0, 1.0, 2.0, 20, 8);
@@ -401,12 +519,15 @@ void drawCone()
     model = glm::mat4(1.f);
     model = glm::rotate(model, glm::radians(xAxisTheta), glm::vec3(1.f, 0.f, 0.f));
     model = glm::rotate(model, glm::radians(yAxisTheta), glm::vec3(0.f, 1.f, 0.f));
-    model = glm::translate(model, glm::vec3(-cx, cy, 0.0f));
+    model = glm::scale(model, glm::vec3(lSizeFromCenter, lSizeFromCenter,
+                                        lSizeFromCenter)); // scaling from center
+    model = glm::translate(model, glm::vec3(lx, ly, lz));
     model = glm::rotate(model, glm::radians(xAxisThetaLeft), glm::vec3(1.0f, 0.0f, 0.0f));
     model = glm::rotate(model, glm::radians(yAxisThetaLeft), glm::vec3(0.0f, 1.0f, 0.0f));
-    model = glm::scale(model, glm::vec3(0.25f, 0.25f, 0.25f));
+    model = glm::scale(model, glm::vec3(lSize, lSize, lSize));
 
-    glUniformMatrix4fv(glGetUniformLocation(ShaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(glGetUniformLocation(ShaderProgramID, "model"), 1, GL_FALSE,
+                       glm::value_ptr(model));
 
     gluQuadricDrawStyle(cone, GLU_LINE);
     gluCylinder(cone, 1.0, 0.0, 2.0, 20, 8);
@@ -458,6 +579,23 @@ void yAxisRevolutionTimer(int value)
     {
         yAxisTheta += value;
         glutTimerFunc(50, yAxisRevolutionTimer, value);
+    }
+    glutPostRedisplay();
+}
+
+void patrolAnimationTimer(int value)
+{
+    if (isPatrolAnimation)
+    {
+        if (abs(rx) > 0.f)
+        {
+            rx -= rx / 50.f;
+        }
+        if (abs(lx) > 0.f)
+        {
+            lx -= lx / 50.f;
+        }
+        glutTimerFunc(50, patrolAnimationTimer, value);
     }
     glutPostRedisplay();
 }
