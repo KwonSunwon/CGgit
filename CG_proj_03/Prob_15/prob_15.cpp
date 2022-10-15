@@ -36,6 +36,9 @@ GLuint VAO_coord;
 GLuint VBO_coord_position;
 GLuint VBO_coord_color;
 
+GLuint VAO_spiral;
+GLuint VBO_spiral;
+
 glm::mat4 model;
 
 // shader functions
@@ -82,13 +85,27 @@ void init();
 
 // animations
 void makeSpiral();
+void initSpiral();
+void drawSpiral();
 void spiralAnimationTimer(int value);
+
 void patrolAnimationTimer(int value);
 void changeAnimationTimer(int value);
 
 // animation variables
 bool isSpiralAnimation = false;
+vector<float> spiralPoints;
+int spiralIdx_right = 0;
+int spiralIdx_left = 0;
+
 bool isPatrolAnimation = false;
+bool isMoveCenter_right = true;
+bool isMoveCenter_left = true;
+bool animationEnd_right = false;
+bool animationEnd_left = false;
+glm::vec3 startPos_right;
+glm::vec3 startPos_left;
+
 bool isChangeAnimation = false;
 
 // variables
@@ -141,6 +158,37 @@ void main(int argc, char **argv)
     else
         std::cout << "GLEW Initialized" << std::endl;
 
+    cout << "\n";
+    cout << "o : select object set\n";
+    cout << "right object\n";
+    cout << "z : CW x-axis rotation\n";
+    cout << "Z : CCW x-axis rotation\n";
+    cout << "x : CW y-axis rotation\n";
+    cout << "X : CCW y-axis rotation\n";
+    cout << ". : scale up\n";
+    cout << "/ : scale down\n";
+    cout << "> : scale up from center\n";
+    cout << "? : scale down from center\n";
+    cout << "arrow : move(x, z)\n";
+    cout << "page up, down : move(y)\n\n";
+    cout << "left object\n";
+    cout << "n : CW x-axis rotation\n";
+    cout << "N : CCW x-axis rotation\n";
+    cout << "m : CW y-axis rotation\n";
+    cout << "M : CCW y-axis rotation\n";
+    cout << "f : scale up\n";
+    cout << "g : scale down\n";
+    cout << "F : scale up from center\n";
+    cout << "G : scale down from center\n";
+    cout << "wasd : move(x, z)\n";
+    cout << "q, e : move(y)\n\n";
+    cout << "r, R: revolution\n";
+    cout << "1 : spiral animation\n";
+    cout << "2 : patrol animation\n";
+    cout << "3 : change animation\n";
+    cout << "ijkl : move two objects\n\n";
+    cout << "ESC : exit\n";
+
     glEnable(GL_DEPTH_TEST);
 
     char vertexFile[] = "vertex.vert";
@@ -166,6 +214,10 @@ GLvoid drawScene()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     drawCoord();
+
+    if (isSpiralAnimation)
+        drawSpiral();
+
     if (selected == SET1)
     {
         drawCube();
@@ -250,13 +302,39 @@ GLvoid keyboard(unsigned char key, int x, int y)
         break;
 
     case '1': // make spiral and move object following spiral
+        isSpiralAnimation = !isSpiralAnimation;
+        if (isSpiralAnimation)
+        {
+            spiralIdx_right = spiralPoints.size() - 3;
+            spiralIdx_left = spiralPoints.size() - 450;
+            isMoveCenter_right = true;
+            isMoveCenter_left = true;
+            glutTimerFunc(50, spiralAnimationTimer, 0);
+        }
         break;
     case '2': // move object to center and far away from center
         isPatrolAnimation = !isPatrolAnimation;
         if (isPatrolAnimation)
+        {
+            startPos_right = glm::vec3(rx, ry, rz);
+            startPos_left = glm::vec3(lx, ly, lz);
+            isMoveCenter_right = true;
+            isMoveCenter_left = true;
+            animationEnd_right = false;
+            animationEnd_left = false;
             glutTimerFunc(50, patrolAnimationTimer, 0);
+        }
         break;
     case '3': // both object move to each other's position
+        isChangeAnimation = !isChangeAnimation;
+        if (isChangeAnimation)
+        {
+            startPos_right = glm::vec3(rx, ry, rz);
+            startPos_left = glm::vec3(lx, ly, lz);
+            animationEnd_right = false;
+            animationEnd_left = false;
+            glutTimerFunc(50, changeAnimationTimer, 29);
+        }
         break;
 
     // l-object
@@ -390,6 +468,9 @@ void initBuffer()
 {
     initCubeBuffer();
     initCoordBuffer();
+
+    makeSpiral();
+    initSpiral();
 }
 
 void initCubeBuffer()
@@ -587,15 +668,172 @@ void patrolAnimationTimer(int value)
 {
     if (isPatrolAnimation)
     {
-        if (abs(rx) > 0.f)
+        // right object
+        if (isMoveCenter_right)
         {
-            rx -= rx / 50.f;
+            rx -= rx / 30.f;
+            ry -= ry / 30.f;
+            rz -= rz / 30.f;
+            if (abs(rx) < 0.005f && abs(ry) < 0.005f && abs(rz) < 0.005f)
+                isMoveCenter_right = false;
         }
-        if (abs(lx) > 0.f)
+        else if (!isMoveCenter_right)
         {
-            lx -= lx / 50.f;
+            rx += startPos_right.x / 30.f;
+            ry += startPos_right.y / 30.f;
+            rz += startPos_right.z / 30.f;
+            if (abs(startPos_right.x) <= abs(rx) && abs(startPos_right.y) <= abs(ry) && abs(startPos_right.z) <= abs(rz))
+                animationEnd_right = true;
         }
-        glutTimerFunc(50, patrolAnimationTimer, value);
+
+        // left object
+        if (isMoveCenter_left)
+        {
+            lx -= lx / 30.f;
+            ly -= ly / 30.f;
+            lz -= lz / 30.f;
+            if (abs(lx) < 0.005f && abs(ly) < 0.005f && abs(lz) < 0.005f)
+                isMoveCenter_left = false;
+        }
+        else if (!isMoveCenter_left)
+        {
+            lx += startPos_left.x / 30.f;
+            ly += startPos_left.y / 30.f;
+            lz += startPos_left.z / 30.f;
+            if (abs(startPos_left.x) <= abs(lx) && abs(startPos_left.y) <= abs(ly) && abs(startPos_left.z) <= abs(lz))
+                animationEnd_left = true;
+        }
+        if (!animationEnd_right || !animationEnd_left)
+            glutTimerFunc(50, patrolAnimationTimer, value);
+    }
+    glutPostRedisplay();
+}
+
+void changeAnimationTimer(int value)
+{
+    if (isChangeAnimation)
+    {
+        // right object
+        rx += (startPos_left.x - startPos_right.x) / 30.f;
+        ry += (startPos_left.y - startPos_right.y) / 30.f;
+        rz += (startPos_left.z - startPos_right.z) / 30.f;
+
+        // left object
+        lx += (startPos_right.x - startPos_left.x) / 30.f;
+        ly += (startPos_right.y - startPos_left.y) / 30.f;
+        lz += (startPos_right.z - startPos_left.z) / 30.f;
+
+        if (value != 0)
+            glutTimerFunc(50, changeAnimationTimer, value - 1);
+        else
+        {
+            rx = startPos_left.x;
+            ry = startPos_left.y;
+            rz = startPos_left.z;
+            lx = startPos_right.x;
+            ly = startPos_right.y;
+            lz = startPos_right.z;
+            isChangeAnimation = false;
+        }
+    }
+    glutPostRedisplay();
+}
+
+void makeSpiral()
+{
+    float x = 0.f, y = 0.f, z = 0.f;
+    float theta = 0.f;
+    float r = 0.f;
+    for (int i = 0; i < 1800; ++i)
+    {
+        theta += 0.025f;
+        r += 0.0005f;
+        x = r * cos(theta);
+        z = r * sin(theta);
+
+        spiralPoints.push_back(x);
+        spiralPoints.push_back(y);
+        spiralPoints.push_back(z);
+    }
+}
+
+void initSpiral()
+{
+    glGenVertexArrays(1, &VAO_spiral);
+    glGenBuffers(1, &VBO_spiral);
+
+    glBindVertexArray(VAO_spiral);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_spiral);
+    glBufferData(GL_ARRAY_BUFFER, spiralPoints.size() * sizeof(float), &spiralPoints[0], GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+}
+
+void drawSpiral()
+{
+    glUseProgram(gluObjShaderID);
+
+    model = glm::mat4(1.0f);
+    model = glm::rotate(model, glm::radians(xAxisTheta), glm::vec3(1.f, 0.f, 0.f));
+    model = glm::rotate(model, glm::radians(yAxisTheta), glm::vec3(0.f, 1.f, 0.f));
+    glUniformMatrix4fv(glGetUniformLocation(gluObjShaderID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+
+    glBindVertexArray(VAO_spiral);
+    glDrawArrays(GL_LINE_STRIP, 0, spiralPoints.size() / 3);
+}
+
+void spiralAnimationTimer(int value)
+{
+    if (isSpiralAnimation)
+    {
+        if (isMoveCenter_right)
+        {
+            rx = spiralPoints[spiralIdx_right];
+            ry = spiralPoints[spiralIdx_right + 1];
+            rz = spiralPoints[spiralIdx_right + 2];
+            spiralIdx_right -= 3;
+            if (spiralIdx_right == 0)
+                isMoveCenter_right = false;
+        }
+        else
+        {
+            rx = spiralPoints[spiralIdx_right];
+            ry = spiralPoints[spiralIdx_right + 1];
+            rz = spiralPoints[spiralIdx_right + 2];
+            spiralIdx_right += 3;
+            if (spiralIdx_right == spiralPoints.size() - 3)
+            {
+                isMoveCenter_right = true;
+            }
+        }
+
+        if (isMoveCenter_left)
+        {
+            lx = spiralPoints[spiralIdx_left];
+            ly = spiralPoints[spiralIdx_left + 1];
+            lz = spiralPoints[spiralIdx_left + 2];
+            spiralIdx_left -= 3;
+            if (spiralIdx_left == 0)
+                isMoveCenter_left = false;
+        }
+        else
+        {
+            lx = spiralPoints[spiralIdx_left];
+            ly = spiralPoints[spiralIdx_left + 1];
+            lz = spiralPoints[spiralIdx_left + 2];
+            spiralIdx_left += 3;
+            if (spiralIdx_left == spiralPoints.size() - 3)
+            {
+                isMoveCenter_left = true;
+            }
+        }
+
+        glutTimerFunc(10, spiralAnimationTimer, value);
     }
     glutPostRedisplay();
 }
