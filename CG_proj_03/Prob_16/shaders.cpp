@@ -117,3 +117,97 @@ char *fileToBuf(char *file)
     buf[length] = 0;                  // Null terminator
     return buf;                       // Return the buffer
 }
+
+// camera class
+// Camera defualt constructor
+Camera::Camera()
+{
+    eye = glm::vec3(0.0f, 0.0f, 3.0f);
+    center = glm::vec3(0.0f, 0.0f, 0.0f);
+    up = glm::vec3(0.0f, 1.0f, 0.0f);
+
+    fovy = 45.0f;
+    aspect = 800.0f / 800.0f;
+
+    zNear = 0.1f;
+    zFar = 100.0f;
+
+    left = -1.0f;
+    right = 1.0f;
+    bottom = -1.0f;
+    top = 1.0f;
+}
+
+void Camera::setCamera()
+{
+    cout << eye.x << " " << eye.y << " " << eye.z << endl;
+    cout << center.x << " " << center.y << " " << center.z << endl;
+    cout << up.x << " " << up.y << " " << up.z << endl;
+    view = glm::lookAt(eye, center, up);
+
+    cout << fovy << " " << aspect << " " << zNear << " " << zFar << endl;
+    projection = glm::perspective(fovy, aspect, zNear, zFar);
+
+    cout << left << " " << right << " " << bottom << " " << top << endl;
+    ortho = glm::ortho(left, right, bottom, top, zNear, zFar);
+}
+
+void Camera::setEye(glm::vec3 eye)
+{
+    this->eye = eye;
+}
+void Camera::setCenter(glm::vec3 center)
+{
+    this->center = center;
+}
+void Camera::setUp(glm::vec3 up)
+{
+    this->up = up;
+}
+
+void Camera::setFovy(float fovy)
+{
+    this->fovy = fovy;
+}
+void Camera::setAspect(float aspect)
+{
+    this->aspect = aspect;
+}
+void Camera::setzNear(float zNear)
+{
+    this->zNear = zNear;
+}
+void Camera::setzFar(float zFar)
+{
+    this->zFar = zFar;
+}
+
+void Camera::setLeft(float left)
+{
+    this->left = left;
+}
+void Camera::setRight(float right)
+{
+    this->right = right;
+}
+void Camera::setBottom(float bottom)
+{
+    this->bottom = bottom;
+}
+void Camera::setTop(float top)
+{
+    this->top = top;
+}
+
+glm::mat4 Camera::getView()
+{
+    return view;
+}
+glm::mat4 Camera::getProjection()
+{
+    return projection;
+}
+glm::mat4 Camera::getOrtho()
+{
+    return ortho;
+}

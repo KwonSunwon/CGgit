@@ -37,5 +37,11 @@
     <None Include="glu_obj.vert">
       <Filter>리소스 파일</Filter>
     </None>
+    <None Include="fragment.frag">
+      <Filter>소스 파일</Filter>
+    </None>
+    <None Include="vertex.vert">
+      <Filter>소스 파일</Filter>
+    </None>
   </ItemGroup>
 </Project>
