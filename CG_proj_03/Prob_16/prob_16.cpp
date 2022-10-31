@@ -49,7 +49,9 @@
 // } Object;
 */
 
+
 Camera camera;
+Object myCube;
 
 void initCamera();
 
@@ -61,8 +63,8 @@ GLvoid keyboard(unsigned char key, int x, int y);
 
 GLclampf g_color[4] = {.5f, .5f, .5f, 1.0f};
 
-// cube model
-float cube[] = {
+
+const vector<float> cube = {
     -0.5f, 0.5f, -0.5f,
     -0.5f, -0.5f, -0.5f,
     0.5f, -0.5f, -0.5f,
@@ -72,7 +74,8 @@ float cube[] = {
     0.5f, -0.5f, 0.5f,
     -0.5f, -0.5f, 0.5f,
     -0.5f, 0.5f, 0.5f};
-GLubyte cubeIdx[] = {
+
+const vector<GLubyte> cubeIdx = {
     0, 1, 2, 0, 2, 3, // front
     4, 5, 6, 4, 6, 7, // back
     7, 6, 1, 7, 1, 0, // left
@@ -80,7 +83,8 @@ GLubyte cubeIdx[] = {
     7, 0, 3, 7, 3, 4, // top
     1, 6, 5, 1, 5, 2  // bottom
 };
-float cubeColor[] = {
+
+const vector<float> cubeColor = {
     1.0f, 0.0f, 0.0f,
     1.0f, 1.0f, 0.0f,
     0.0f, 1.0f, 0.0f,
@@ -132,7 +136,7 @@ glm::mat4 projection;
 float xAngle = 30.f;
 float yAngle = 30.f;
 
-// toggle
+#pragma region "Toggles"
 bool is_DepthTest = true;
 int projectionType = PERSP;
 
@@ -143,6 +147,7 @@ int cube_sideFace = CLOSE;
 
 int pyramid_pointDirection = UPWARD;
 bool is_pyramid_animation = false;
+#pragma endregion
 
 void main(int argc, char **argv)
 {
@@ -162,14 +167,16 @@ void main(int argc, char **argv)
 
     glEnable(GL_DEPTH_TEST);
 
-    char vertexFile[] = "vertex.vert";
-    char fragmentFile[] = "fragment.frag";
-    shaderProgramID = initShader(vertexFile, fragmentFile);
+    // char vertexFile[] = "vertex.vert";
+    // char fragmentFile[] = "fragment.frag";
+    // shaderProgramID = initShader(vertexFile, fragmentFile);
 
-    init();
+    // init();
+
+    myCube.setModel(cube, cubeColor, cubeIdx);
 
     // test
-    initCubeBuffer();
+    // initCubeBuffer();
 
     glutKeyboardFunc(keyboard);
     glutDisplayFunc(drawScene);
@@ -360,24 +367,24 @@ void drawCube()
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, (void *)0);
 }
 
-void initCubeBuffer()
-{
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
+// void initCubeBuffer()
+// {
+//     glGenVertexArrays(1, &VAO);
+//     glBindVertexArray(VAO);
 
-    glGenBuffers(1, &VBO_position);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_position);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
-    glEnableVertexAttribArray(0);
+//     glGenBuffers(1, &VBO_position);
+//     glBindBuffer(GL_ARRAY_BUFFER, VBO_position);
+//     glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
+//     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+//     glEnableVertexAttribArray(0);
 
-    glGenBuffers(1, &VBO_color);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_color);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeColor), cubeColor, GL_STATIC_DRAW);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
-    glEnableVertexAttribArray(1);
+//     glGenBuffers(1, &VBO_color);
+//     glBindBuffer(GL_ARRAY_BUFFER, VBO_color);
+//     glBufferData(GL_ARRAY_BUFFER, sizeof(cubeColor), cubeColor, GL_STATIC_DRAW);
+//     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+//     glEnableVertexAttribArray(1);
 
-    glGenBuffers(1, &EBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cubeIdx), cubeIdx, GL_STATIC_DRAW);
-}
+//     glGenBuffers(1, &EBO);
+//     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+//     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cubeIdx), cubeIdx, GL_STATIC_DRAW);
+// }

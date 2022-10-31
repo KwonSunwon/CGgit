@@ -118,7 +118,8 @@ char *fileToBuf(char *file)
     return buf;                       // Return the buffer
 }
 
-// camera class
+#pragma region "CameraClass"
+
 // Camera defualt constructor
 Camera::Camera()
 {
@@ -211,3 +212,114 @@ glm::mat4 Camera::getOrtho()
 {
     return ortho;
 }
+#pragma endregion
+
+#pragma region "ObjectClass"
+
+void Object::initPos()
+{
+    pos = glm::vec3(0.0f, 0.0f, 0.0f);
+    scale = glm::vec3(1.0f, 1.0f, 1.0f);
+    rotate = glm::vec3(0.0f, 0.0f, 0.0f);
+}
+
+void Object::setPos(glm::vec3 pos)
+{
+    this->pos = pos;
+}
+void Object::setScale(glm::vec3 scale)
+{
+    this->scale = scale;
+}
+void Object::setRotate(glm::vec3 rotate)
+{
+    this->rotate = rotate;
+}
+
+glm::vec3 Object::getPos()
+{
+    return pos;
+}
+glm::vec3 Object::getScale()
+{
+    return scale;
+}
+glm::vec3 Object::getRotate()
+{
+    return rotate;
+}
+
+void Object::setModel(const vector<float> vertices, const vector<float> colors, const vector<GLubyte> indices)
+{
+    for (int i = 0; i < vertices.size(); i += 3)
+    {
+        this->vertices.push_back(glm::vec3(vertices[i], vertices[i + 1], vertices[i + 2]));
+    }
+    for (int i = 0; i < colors.size(); i += 3)
+    {
+        this->colors.push_back(glm::vec3(colors[i], colors[i + 1], colors[i + 2]));
+    }
+    for (int i = 0; i < indices.size(); i++)
+    {
+        this->indices.push_back(indices[i]);
+    }
+
+    // Test
+    // cout << "vertices: " << endl;
+    // for (int i = 0; i < this->vertices.size(); i++)
+    // {
+    //     cout << this->vertices[i].x << " " << this->vertices[i].y << " " << this->vertices[i].z << endl;
+    // }
+    // cout << "colors: " << endl;
+    // for (int i = 0; i < this->colors.size(); i++)
+    // {
+    //     cout << this->colors[i].x << " " << this->colors[i].y << " " << this->colors[i].z << endl;
+    // }
+    // cout << "indices: " << endl;
+    // for (int i = 0; i < this->indices.size(); i++)
+    // {
+    //     cout << this->indices[i] << endl;
+    // }
+}
+
+void Object::initVAO()
+{
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
+    glEnableVertexAttribArray(0);
+
+    glGenBuffers(1, &cbo);
+    glBindBuffer(GL_ARRAY_BUFFER, cbo);
+    glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(glm::vec3), &colors[0], GL_STATIC_DRAW);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
+    glEnableVertexAttribArray(1);
+
+    glGenBuffers(1, &ebo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLubyte), &indices[0], GL_STATIC_DRAW);
+
+    glBindVertexArray(0);
+}
+
+void Object::init()
+{
+    initPos();
+    initVAO();
+}
+
+void Object::draw()
+{
+    
+    glBindVertexArray(vao);
+    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_BYTE, (void *)0);
+    glBindVertexArray(0);
+}
+
+void Object::draw(void *func);
+
+#pragma endregion

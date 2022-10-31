@@ -50,6 +50,64 @@ public:
     glm::mat4 getOrtho();
 } Camera;
 
+typedef class Object
+{
+private:
+    glm::vec3 pos;
+    glm::vec3 scale;
+    glm::vec3 rotate;
+
+    GLuint vao;
+    GLuint vbo;
+    GLuint cbo;
+    GLuint ebo;
+
+    vector<glm::vec3> vertices;
+    vector<glm::vec3> colors;
+    vector<GLuint> indices;
+
+    glm::mat4 transformMat;
+
+public:
+    void init();
+    void initVAO();
+    void initPos();
+
+    void setModel(const vector<float> vertices, const vector<float> colors, const vector<GLubyte> indices);
+    void draw();
+
+#pragma region Setters
+    void setPos(glm::vec3 pos);
+    void setPosX(float x);
+    void setPosY(float y);
+    void setPosZ(float z);
+    void setScale(glm::vec3 scale);
+    void setScaleX(float x);
+    void setScaleY(float y);
+    void setScaleZ(float z);
+    void setRotate(glm::vec3 rotate);
+    void setRotateX(float x);
+    void setRotateY(float y);
+    void setRotateZ(float z);
+#pragma endregion
+
+#pragma region Getters
+    glm::vec3 getPos();
+    float getPosX();
+    float getPosY();
+    float getPosZ();
+    glm::vec3 getScale();
+    float getScaleX();
+    float getScaleY();
+    float getScaleZ();
+    glm::vec3 getRotate();
+    float getRotateX();
+    float getRotateY();
+    float getRotateZ();
+#pragma endregion
+
+} Object;
+
 void makeVertexShaders(char *file);
 void makeFragmentShaders(char *file);
 GLuint initShader(char *vertexFile, char *fragmentFile);
