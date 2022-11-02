@@ -64,7 +64,7 @@ protected:
 
     vector<float> vertices;
     vector<float> colors;
-    vector<GLuint> indices;
+    vector<GLubyte> indices;
 
     glm::mat4 transformMat;
 
