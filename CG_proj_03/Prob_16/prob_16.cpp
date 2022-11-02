@@ -10,61 +10,72 @@
 #define UPWARD 0
 #define DOWNWARD 1
 
-/*
-// typedef class
-// {
-// private:
-//     float x, y, z;
-//     float scale;
-//     GLuint vao;
-//     GLuint vbo_pos;
-//     GLuint vbo_col;
-//     GLuint ebo;
-//     glm::mat4 model;
-//     vector<glm::vec3> vertices;
-//     vector<glm::vec3> colors;
-//     vector<GLuint> indices;
+// Cube index
+#define FRONT 0
+#define BACK 1
+#define LEFT 2
+#define RIGHT 3
+#define TOP 4
+#define BOTTOM 5
 
-// public:
-//     void init();
-//     void draw(GLuint shaderProgramID);
+#pragma region "Coordinate"
 
-//     void setModel(glm::mat4 model);
-//     void setVertices(vector<glm::vec3> vertices);
-//     void setColors(vector<glm::vec3> colors);
-//     void setIndices(vector<GLuint> indices);
-//     void setScale(float scale);
-//     void setX(float x);
-//     void setY(float y);
-//     void setZ(float z);
+typedef class Coord : public Object
+{
+public:
+    Coord(vector<float> vertices, vector<float> colors) : Object(vertices, colors){};
 
-//     float getX();
-//     float getY();
-//     float getZ();
-//     float getScale();
-//     glm::mat4 getModel();
-//     vector<glm::vec3> getVertices();
-//     vector<glm::vec3> getColors();
-//     vector<GLuint> getIndices();
-// } Object;
-*/
+    void transform(GLuint shaderProgramID) override;
+    void draw() override;
+} Coord;
 
+const vector<float> coordModel = {
+    -1.f, 0.0f, 0.0f,
+    1.f, 0.0f, 0.0f,
 
-Camera camera;
-Object myCube;
+    0.0f, 0.0f, -1.f,
+    0.0f, 0.0f, 1.f,
 
-void initCamera();
+    0.0f, -1.f, 0.0f,
+    0.0f, 1.f, 0.0f};
+const vector<float> coordColor = {
+    0.f, 0.f, 1.f,
+    0.f, 0.f, 1.f,
+    0.f, 1.f, 0.f,
+    0.f, 1.f, 0.f,
+    1.f, 0.f, 0.f,
+    1.f, 0.f, 0.f};
+Coord coord{coordModel, coordColor};
 
-void init();
+void initCoord();
 
-GLvoid drawScene(GLvoid);
-GLvoid Reshape(int w, int h);
-GLvoid keyboard(unsigned char key, int x, int y);
+#pragma endregion
 
-GLclampf g_color[4] = {.5f, .5f, .5f, 1.0f};
+#pragma region "Cube"
+typedef class Panel : public Object
+{
+public:
+    Panel(vector<float> vertices, vector<float> colors, vector<GLubyte> indices) : Object(vertices, colors, indices){};
 
+    void transform(GLuint shaderProgramID) override;
+    void draw() override;
+} Panel;
 
-const vector<float> cube = {
+// const vector<float> panelModel = {
+//     -1.f, 0.f, 1.f,
+//     -1.f, 0.f, -1.f,
+//     1.f, 0.f, -1.f,
+//     1.f, 0.f, 1.f};
+// const vector<float> panelColor = {
+//     1.f, 0.f, 1.f,
+//     0.f, 0.f, 1.f,
+//     0.f, 1.f, 0.f,
+//     1.f, 1.f, 0.f};
+// const vector<GLubyte> panelIndices = {
+//     0, 1, 2,
+//     0, 2, 3};
+
+const vector<float> panelModel = {
     -0.5f, 0.5f, -0.5f,
     -0.5f, -0.5f, -0.5f,
     0.5f, -0.5f, -0.5f,
@@ -74,17 +85,7 @@ const vector<float> cube = {
     0.5f, -0.5f, 0.5f,
     -0.5f, -0.5f, 0.5f,
     -0.5f, 0.5f, 0.5f};
-
-const vector<GLubyte> cubeIdx = {
-    0, 1, 2, 0, 2, 3, // front
-    4, 5, 6, 4, 6, 7, // back
-    7, 6, 1, 7, 1, 0, // left
-    3, 2, 5, 3, 5, 4, // right
-    7, 0, 3, 7, 3, 4, // top
-    1, 6, 5, 1, 5, 2  // bottom
-};
-
-const vector<float> cubeColor = {
+const vector<float> panelColor = {
     1.0f, 0.0f, 0.0f,
     1.0f, 1.0f, 0.0f,
     0.0f, 1.0f, 0.0f,
@@ -93,37 +94,33 @@ const vector<float> cubeColor = {
     1.0f, 0.0f, 1.0f,
     1.0f, 0.0f, 0.0f,
     1.0f, 1.0f, 0.0f};
+const vector<GLubyte> panelIndices = {
+    0, 1, 2, 0, 2, 3, // front
+    4, 5, 6, 4, 6, 7, // back
+    7, 6, 1, 7, 1, 0, // left
+    3, 2, 5, 3, 5, 4, // right
+    7, 0, 3, 7, 3, 4, // top
+    1, 6, 5, 1, 5, 2, // bottom
+};
 
-void drawCube();
-void initCubeBuffer();
+Panel cube{panelModel, panelColor, panelIndices};
 
-GLuint VAO;
-GLuint VBO_position;
-GLuint VBO_color;
-GLuint EBO;
+void initCube();
 
-// coordinate object
-const GLfloat coord[] = {
-    -1.f, 0.0f, 0.0f,
-    1.f, 0.0f, 0.0f,
-    0.0f, 0.0f, -1.f,
-    0.0f, 0.0f, 1.f,
-    0.0f, -1.f, 0.0f,
-    0.0f, 1.f, 0.0f};
-const float coordColor[] = {
-    1.f, 0.f, 0.f,
-    1.f, 0.f, 0.f,
-    0.f, 1.f, 0.f,
-    0.f, 1.f, 0.f,
-    0.f, 0.f, 1.f,
-    0.f, 0.f, 1.f};
+#pragma endregion
 
-GLuint VAO_coord;
-GLuint VBO_coord_position;
-GLuint VBO_coord_color;
+Camera camera;
+void initCamera();
 
-void initCoordBuffer();
-void drawCoord();
+#pragma region "GLfunctions"
+GLvoid drawScene(GLvoid);
+GLvoid Reshape(int w, int h);
+GLvoid keyboard(unsigned char key, int x, int y);
+#pragma endregion
+
+void init();
+
+GLclampf g_color[4] = {.5f, .5f, .5f, 1.0f};
 
 // shader variables
 GLuint shaderProgramID;
@@ -133,7 +130,7 @@ glm::mat4 view;
 glm::mat4 projection;
 
 // object variables
-float xAngle = 30.f;
+float xAngle = -30.f;
 float yAngle = 30.f;
 
 #pragma region "Toggles"
@@ -167,16 +164,12 @@ void main(int argc, char **argv)
 
     glEnable(GL_DEPTH_TEST);
 
-    // char vertexFile[] = "vertex.vert";
-    // char fragmentFile[] = "fragment.frag";
-    // shaderProgramID = initShader(vertexFile, fragmentFile);
+    char vertexFile[] = "vertex.vert";
+    char fragmentFile[] = "fragment.frag";
+    shaderProgramID = initShader(vertexFile, fragmentFile);
 
-    // init();
-
-    myCube.setModel(cube, cubeColor, cubeIdx);
-
-    // test
-    // initCubeBuffer();
+    // Initialize
+    init();
 
     glutKeyboardFunc(keyboard);
     glutDisplayFunc(drawScene);
@@ -191,6 +184,7 @@ GLvoid drawScene()
 
     glUseProgram(shaderProgramID);
 
+    // Camera transformation
     if (projectionType == PERSP)
         projection = camera.getProjection();
     else
@@ -202,8 +196,10 @@ GLvoid drawScene()
     glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
     // draw coordinate
-    drawCube();
-    drawCoord();
+    coord.render(shaderProgramID);
+
+    // draw cube
+    cube.render(shaderProgramID);
 
     glutSwapBuffers();
 }
@@ -264,43 +260,6 @@ GLvoid keyboard(unsigned char key, int x, int y)
     glutPostRedisplay();
 }
 
-/*
-// void Object::init()
-// {
-//     glGenVertexArrays(1, &vao);
-//     glBindVertexArray(vao);
-
-//     glGenBuffers(1, &vbo_pos);
-//     glBindBuffer(GL_ARRAY_BUFFER, vbo_pos);
-//     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
-//     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-//     glEnableVertexAttribArray(0);
-
-//     glGenBuffers(1, &vbo_col);
-//     glBindBuffer(GL_ARRAY_BUFFER, vbo_col);
-//     glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(glm::vec3), &colors[0], GL_STATIC_DRAW);
-//     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-//     glEnableVertexAttribArray(1);
-
-//     glGenBuffers(1, &ebo);
-//     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-//     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), &indices[0], GL_STATIC_DRAW);
-
-//     glBindVertexArray(0);
-// }
-
-// void Object::draw(GLuint shaderProgramID)
-// {
-//     glUseProgram(shaderProgramID);
-
-//     glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(model));
-
-//     glBindVertexArray(vao);
-//     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-//     glBindVertexArray(0);
-// }
-*/
-
 void initCamera()
 {
     camera.setFovy(45.0f);
@@ -318,73 +277,82 @@ void initCamera()
 void init()
 {
     initCamera();
-    initCoordBuffer();
+    initCoord();
+    initCube();
 }
 
-void initCoordBuffer()
+#pragma region "Coordination"
+
+void Coord::transform(GLuint shaderProgramID)
 {
-    glGenVertexArrays(1, &VAO_coord);
-    glBindVertexArray(VAO_coord);
+    transformMat = glm::mat4(1.f);
+    transformMat = glm::rotate(transformMat, glm::radians(rotate.x), glm::vec3(1.0f, 0.0f, 0.0f));
+    transformMat = glm::rotate(transformMat, glm::radians(rotate.y), glm::vec3(0.0f, 1.0f, 0.0f));
+    transformMat = glm::scale(transformMat, scale);
 
-    glGenBuffers(1, &VBO_coord_position);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_coord_position);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(coord), coord, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
-    glEnableVertexAttribArray(0);
-
-    glGenBuffers(1, &VBO_coord_color);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_coord_color);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(coordColor), coordColor, GL_STATIC_DRAW);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
-    glEnableVertexAttribArray(1);
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(transformMat));
 }
 
-void drawCoord()
+void Coord::draw()
 {
-    glUseProgram(shaderProgramID);
-
-    model = glm::mat4(1.f);
-    model = glm::rotate(model, glm::radians(xAngle), glm::vec3(1.0f, 0.0f, 0.0f));
-    model = glm::rotate(model, glm::radians(yAngle), glm::vec3(0.0f, 1.0f, 0.0f));
-    model = glm::scale(model, glm::vec3(1.f, 1.f, 1.f));
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(model));
-
-    glBindVertexArray(VAO_coord);
+    glBindVertexArray(vao);
     glDrawArrays(GL_LINES, 0, 6);
 }
 
-void drawCube()
+void initCoord()
 {
-    model = glm::mat4(1.f);
-    model = glm::translate(model, glm::vec3(0.f, 0.f, 0.0f));
-    model = glm::rotate(model, glm::radians(-30.f), glm::vec3(1.0f, 0.0f, 0.0f));
-    model = glm::rotate(model, glm::radians(30.f), glm::vec3(0.0f, 1.0f, 0.0f));
-    model = glm::scale(model, glm::vec3(1.f, 1.f, 1.f));
-
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(model));
-
-    glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, (void *)0);
+    coord.setRotate(glm::vec3(-30.f, 30.f, 0.f));
+    coord.setScale(glm::vec3(1.2f, 1.2f, 1.2f));
+    coord.initBuffer();
 }
 
-// void initCubeBuffer()
-// {
-//     glGenVertexArrays(1, &VAO);
-//     glBindVertexArray(VAO);
+#pragma endregion
 
-//     glGenBuffers(1, &VBO_position);
-//     glBindBuffer(GL_ARRAY_BUFFER, VBO_position);
-//     glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
-//     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
-//     glEnableVertexAttribArray(0);
+void initCube()
+{
+    cube.setRotate(glm::vec3(-30.f, 30.f, 0.f));
+    cube.initBuffer();
 
-//     glGenBuffers(1, &VBO_color);
-//     glBindBuffer(GL_ARRAY_BUFFER, VBO_color);
-//     glBufferData(GL_ARRAY_BUFFER, sizeof(cubeColor), cubeColor, GL_STATIC_DRAW);
-//     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
-//     glEnableVertexAttribArray(1);
+    // for (int i = 0; i < 6; ++i)
+    // {
+    //     cube[i].initModel(panelModel, panelColor, panelIndices);
+    //     cube[i].initBuffer();
+    // }
 
-//     glGenBuffers(1, &EBO);
-//     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-//     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cubeIdx), cubeIdx, GL_STATIC_DRAW);
-// }
+    // cube[FRONT].setRotate(glm::vec3(-90.f, 0.f, 0.f));
+    // cube[FRONT].setPos(glm::vec3(0.f, 0.f, 1.f));
+
+    // cube[BACK].setRotate(glm::vec3(90.f, 0.f, 0.f));
+    // cube[BACK].setPos(glm::vec3(0.f, 0.f, -1.f));
+
+    // cube[LEFT].setRotate(glm::vec3(0.f, 0.f, 90.f));
+    // cube[LEFT].setPos(glm::vec3(-1.f, 0.f, 0.f));
+
+    // cube[RIGHT].setRotate(glm::vec3(0.f, 0.f, -90.f));
+    // cube[RIGHT].setPos(glm::vec3(1.f, 0.f, 0.f));
+
+    // cube[TOP].setRotate(glm::vec3(0.f, 0.f, 0.f));
+    // cube[TOP].setPos(glm::vec3(0.f, 1.f, 0.f));
+
+    // cube[BOTTOM].setRotate(glm::vec3(0.f, 180.f, 0.f));
+    // cube[BOTTOM].setPos(glm::vec3(0.f, -1.f, 0.f));
+}
+
+void Panel::draw()
+{
+    glBindVertexArray(vao);
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, (void *)0);
+    // glDrawArrays(GL_TRIANGLES, 0, 36);
+}
+
+void Panel::transform(GLuint shaderProgramID)
+{
+    // cout << "transform" << endl;
+
+    transformMat = glm::mat4(1.f);
+    transformMat = glm::rotate(transformMat, glm::radians(rotate.x), glm::vec3(1.0f, 0.0f, 0.0f));
+    transformMat = glm::rotate(transformMat, glm::radians(rotate.y), glm::vec3(0.0f, 1.0f, 0.0f));
+    transformMat = glm::scale(transformMat, scale);
+
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(transformMat));
+}

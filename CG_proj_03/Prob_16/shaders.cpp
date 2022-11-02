@@ -2,6 +2,8 @@
 GLuint vertexShader;
 GLuint fragmentShader;
 
+#pragma region "Shader"
+
 void makeVertexShaders(char *file)
 {
     GLchar *vertexSource;
@@ -77,28 +79,28 @@ GLuint initShader(char *vertexFile, char *fragmentFile)
     return ShaderProgramID;
 }
 
-void initVAO(GLuint &VAO)
-{
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-}
+// void initVAO(GLuint &VAO)
+// {
+//     glGenVertexArrays(1, &VAO);
+//     glBindVertexArray(VAO);
+// }
 
-void initVBO_position(GLuint &VBO_position)
-{
-    glGenBuffers(1, &VBO_position);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_position);
-}
-void initVBO_color(GLuint &VBO_color)
-{
-    glGenBuffers(1, &VBO_color);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_color);
-}
+// void initVBO_position(GLuint &VBO_position)
+// {
+//     glGenBuffers(1, &VBO_position);
+//     glBindBuffer(GL_ARRAY_BUFFER, VBO_position);
+// }
+// void initVBO_color(GLuint &VBO_color)
+// {
+//     glGenBuffers(1, &VBO_color);
+//     glBindBuffer(GL_ARRAY_BUFFER, VBO_color);
+// }
 
-void initEBO(GLuint &EBO)
-{
-    glGenBuffers(1, &EBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-}
+// void initEBO(GLuint &EBO)
+// {
+//     glGenBuffers(1, &EBO);
+//     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+// }
 
 char *fileToBuf(char *file)
 {
@@ -117,6 +119,8 @@ char *fileToBuf(char *file)
     buf[length] = 0;                  // Null terminator
     return buf;                       // Return the buffer
 }
+
+#pragma endregion
 
 #pragma region "CameraClass"
 
@@ -141,16 +145,16 @@ Camera::Camera()
 
 void Camera::setCamera()
 {
-    cout << eye.x << " " << eye.y << " " << eye.z << endl;
-    cout << center.x << " " << center.y << " " << center.z << endl;
-    cout << up.x << " " << up.y << " " << up.z << endl;
     view = glm::lookAt(eye, center, up);
-
-    cout << fovy << " " << aspect << " " << zNear << " " << zFar << endl;
     projection = glm::perspective(fovy, aspect, zNear, zFar);
-
-    cout << left << " " << right << " " << bottom << " " << top << endl;
     ortho = glm::ortho(left, right, bottom, top, zNear, zFar);
+
+    // test
+    // cout << eye.x << " " << eye.y << " " << eye.z << endl;
+    // cout << center.x << " " << center.y << " " << center.z << endl;
+    // cout << up.x << " " << up.y << " " << up.z << endl;
+    // cout << fovy << " " << aspect << " " << zNear << " " << zFar << endl;
+    // cout << left << " " << right << " " << bottom << " " << top << endl;
 }
 
 void Camera::setEye(glm::vec3 eye)
@@ -216,6 +220,23 @@ glm::mat4 Camera::getOrtho()
 
 #pragma region "ObjectClass"
 
+Object::Object()
+{
+    initPos();
+}
+
+Object::Object(vector<float> vertices, vector<float> colors)
+{
+    initPos();
+    initModel(vertices, colors);
+}
+
+Object::Object(vector<float> vertices, vector<float> colors, vector<GLubyte> indices)
+{
+    initPos();
+    initModel(vertices, colors, indices);
+}
+
 void Object::initPos()
 {
     pos = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -248,78 +269,125 @@ glm::vec3 Object::getRotate()
 {
     return rotate;
 }
-
-void Object::setModel(const vector<float> vertices, const vector<float> colors, const vector<GLubyte> indices)
+float Object::getRotateX()
 {
-    for (int i = 0; i < vertices.size(); i += 3)
+    return rotate.x;
+}
+float Object::getRotateY()
+{
+    return rotate.y;
+}
+float Object::getRotateZ()
+{
+    return rotate.z;
+}
+
+void Object::setModelPos(vector<float> vertices)
+{
+    for (int i = 0; i < vertices.size(); i++)
     {
-        this->vertices.push_back(glm::vec3(vertices[i], vertices[i + 1], vertices[i + 2]));
+        this->vertices.push_back(vertices[i]);
     }
-    for (int i = 0; i < colors.size(); i += 3)
+}
+void Object::setModelColor(vector<float> colors)
+{
+    for (int i = 0; i < colors.size(); i++)
     {
-        this->colors.push_back(glm::vec3(colors[i], colors[i + 1], colors[i + 2]));
+        this->colors.push_back(colors[i]);
     }
+}
+void Object::setModelIndices(vector<GLubyte> indices)
+{
     for (int i = 0; i < indices.size(); i++)
     {
         this->indices.push_back(indices[i]);
     }
-
-    // Test
-    // cout << "vertices: " << endl;
-    // for (int i = 0; i < this->vertices.size(); i++)
-    // {
-    //     cout << this->vertices[i].x << " " << this->vertices[i].y << " " << this->vertices[i].z << endl;
-    // }
-    // cout << "colors: " << endl;
-    // for (int i = 0; i < this->colors.size(); i++)
-    // {
-    //     cout << this->colors[i].x << " " << this->colors[i].y << " " << this->colors[i].z << endl;
-    // }
-    // cout << "indices: " << endl;
-    // for (int i = 0; i < this->indices.size(); i++)
-    // {
-    //     cout << this->indices[i] << endl;
-    // }
 }
 
-void Object::initVAO()
+void Object::initModel(vector<float> vertices, vector<float> colors)
+{
+    setModelPos(vertices);
+    setModelColor(colors);
+}
+
+void Object::initModel(vector<float> vertices, vector<float> colors, vector<GLubyte> indices)
+{
+    setModelPos(vertices);
+    setModelColor(colors);
+    setModelIndices(indices);
+
+    // Test
+    cout << "vertices: " << endl;
+    for (int i = 0; i < this->vertices.size(); i += 3)
+    {
+        cout << this->vertices[i] << " " << this->vertices[i + 1] << " " << this->vertices[i + 2] << endl;
+    }
+    cout << "colors: " << endl;
+    for (int i = 0; i < this->colors.size(); i += 3)
+    {
+        cout << this->colors[i] << " " << this->colors[i + 1] << " " << this->colors[i + 2] << endl;
+    }
+    cout << "indices: " << endl;
+    for (int i = 0; i < this->indices.size(); i += 3)
+    {
+        cout << this->indices[i] << " " << this->indices[i + 1] << " " << this->indices[i + 2] << endl;
+    }
+}
+
+void Object::init()
+{
+    initPos();
+    initBuffer();
+}
+
+void Object::initBuffer()
 {
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
 
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
     glEnableVertexAttribArray(0);
 
     glGenBuffers(1, &cbo);
     glBindBuffer(GL_ARRAY_BUFFER, cbo);
-    glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(glm::vec3), &colors[0], GL_STATIC_DRAW);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
+    glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(float), &colors[0], GL_STATIC_DRAW);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
     glEnableVertexAttribArray(1);
 
-    glGenBuffers(1, &ebo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLubyte), &indices[0], GL_STATIC_DRAW);
-
-    glBindVertexArray(0);
+    if (!indices.empty())
+    {
+        glGenBuffers(1, &ebo);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size(), &indices[0], GL_STATIC_DRAW);
+    }
 }
 
-void Object::init()
+void Object::transform(GLuint shaderProgramID)
 {
-    initPos();
-    initVAO();
+    transformMat = glm::mat4(1.f);
+    transformMat = glm::translate(transformMat, pos);
+    transformMat = glm::rotate(transformMat, glm::radians(rotate.x), glm::vec3(1.f, 0.f, 0.f));
+    transformMat = glm::rotate(transformMat, glm::radians(rotate.y), glm::vec3(0.f, 1.f, 0.f));
+    transformMat = glm::rotate(transformMat, glm::radians(rotate.z), glm::vec3(0.f, 0.f, 1.f));
+    transformMat = glm::scale(transformMat, scale);
+
+    glUniformMatrix4fv(glGetAttribLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(transformMat));
 }
 
 void Object::draw()
 {
-    
     glBindVertexArray(vao);
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_BYTE, (void *)0);
-    glBindVertexArray(0);
 }
 
-void Object::draw(void *func);
+void Object::render(GLuint shaderProgramID)
+{
+    glUseProgram(shaderProgramID);
+    transform(shaderProgramID);
+    draw();
+}
 
 #pragma endregion

@@ -52,7 +52,7 @@ public:
 
 typedef class Object
 {
-private:
+protected:
     glm::vec3 pos;
     glm::vec3 scale;
     glm::vec3 rotate;
@@ -62,21 +62,33 @@ private:
     GLuint cbo;
     GLuint ebo;
 
-    vector<glm::vec3> vertices;
-    vector<glm::vec3> colors;
+    vector<float> vertices;
+    vector<float> colors;
     vector<GLuint> indices;
 
     glm::mat4 transformMat;
 
 public:
+    Object();
+    Object(vector<float> vertices, vector<float> colors);
+    Object(vector<float> vertices, vector<float> colors, vector<GLubyte> indices);
+
     void init();
-    void initVAO();
     void initPos();
+    void initBuffer();
 
-    void setModel(const vector<float> vertices, const vector<float> colors, const vector<GLubyte> indices);
-    void draw();
+    void setModelPos(vector<float> vertices);
+    void setModelColor(vector<float> colors);
+    void setModelIndices(vector<GLubyte> indices);
 
-#pragma region Setters
+    void initModel(vector<float> vertices, vector<float> colors);
+    void initModel(vector<float> vertices, vector<float> colors, vector<GLubyte> indices);
+
+    virtual void transform(GLuint shaderProgramID);
+    virtual void draw();
+    void render(GLuint shaderProgramID);
+
+    // Setters
     void setPos(glm::vec3 pos);
     void setPosX(float x);
     void setPosY(float y);
@@ -89,9 +101,8 @@ public:
     void setRotateX(float x);
     void setRotateY(float y);
     void setRotateZ(float z);
-#pragma endregion
 
-#pragma region Getters
+    // Getters
     glm::vec3 getPos();
     float getPosX();
     float getPosY();
@@ -104,17 +115,16 @@ public:
     float getRotateX();
     float getRotateY();
     float getRotateZ();
-#pragma endregion
-
 } Object;
 
+// Shader functions
 void makeVertexShaders(char *file);
 void makeFragmentShaders(char *file);
 GLuint initShader(char *vertexFile, char *fragmentFile);
 
-void initVAO(GLuint &VAO);
-void initVBO_position(GLuint &VBO_position);
-void initVBO_color(GLuint &VBO_color);
-void initEBO(GLuint &EBO);
+// void initVAO(GLuint &VAO);
+// void initVBO_position(GLuint &VBO_position);
+// void initVBO_color(GLuint &VBO_color);
+// void initEBO(GLuint &EBO);
 
 char *fileToBuf(char *fileName);
