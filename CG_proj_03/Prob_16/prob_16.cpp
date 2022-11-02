@@ -89,6 +89,22 @@ void initCube();
 
 #pragma endregion
 
+#pragma region "Pyramid"
+
+typedef class Pyramid : public Object
+{
+private:
+    Object *base;
+    Object *front;
+    Object *back;
+    Object *left;
+    Object *right;
+
+public:
+} Pyramid;
+
+#pragma endregion
+
 Camera camera;
 void initCamera();
 
@@ -353,6 +369,7 @@ void initCoord()
 
 #pragma endregion
 
+#pragma region "Cube"
 void initCube()
 {
     for (int i = 0; i < 6; ++i)
@@ -411,8 +428,6 @@ void Panel::frontRender(GLuint shaderProgramID)
     frontTransform(shaderProgramID);
     draw();
 }
-
-#pragma endregion
 
 void cube_yAxisRotation(int value)
 {
@@ -501,3 +516,5 @@ void cube_sideFaceClose(int value)
     }
     glutPostRedisplay();
 }
+
+#pragma endregion
