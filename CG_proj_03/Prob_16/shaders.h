@@ -93,10 +93,12 @@ public:
     void setPosX(float x);
     void setPosY(float y);
     void setPosZ(float z);
+
     void setScale(glm::vec3 scale);
     void setScaleX(float x);
     void setScaleY(float y);
     void setScaleZ(float z);
+
     void setRotate(glm::vec3 rotate);
     void setRotateX(float x);
     void setRotateY(float y);
@@ -104,17 +106,9 @@ public:
 
     // Getters
     glm::vec3 getPos();
-    float getPosX();
-    float getPosY();
-    float getPosZ();
     glm::vec3 getScale();
-    float getScaleX();
-    float getScaleY();
-    float getScaleZ();
     glm::vec3 getRotate();
-    float getRotateX();
-    float getRotateY();
-    float getRotateZ();
+
 } Object;
 
 // Shader functions

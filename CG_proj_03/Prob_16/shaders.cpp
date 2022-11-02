@@ -244,43 +244,24 @@ void Object::initPos()
     rotate = glm::vec3(0.0f, 0.0f, 0.0f);
 }
 
-void Object::setPos(glm::vec3 pos)
-{
-    this->pos = pos;
-}
-void Object::setScale(glm::vec3 scale)
-{
-    this->scale = scale;
-}
-void Object::setRotate(glm::vec3 rotate)
-{
-    this->rotate = rotate;
-}
+void Object::setPos(glm::vec3 pos) { this->pos = pos; }
+void Object::setPosX(float x) { this->pos.x = x; }
+void Object::setPosY(float y) { this->pos.y = y; }
+void Object::setPosZ(float z) { this->pos.z = z; }
 
-glm::vec3 Object::getPos()
-{
-    return pos;
-}
-glm::vec3 Object::getScale()
-{
-    return scale;
-}
-glm::vec3 Object::getRotate()
-{
-    return rotate;
-}
-float Object::getRotateX()
-{
-    return rotate.x;
-}
-float Object::getRotateY()
-{
-    return rotate.y;
-}
-float Object::getRotateZ()
-{
-    return rotate.z;
-}
+void Object::setScale(glm::vec3 scale) { this->scale = scale; }
+void Object::setScaleX(float x) { this->scale.x = x; }
+void Object::setScaleY(float y) { this->scale.y = y; }
+void Object::setScaleZ(float z) { this->scale.z = z; }
+
+void Object::setRotate(glm::vec3 rotate) { this->rotate = rotate; }
+void Object::setRotateX(float x) { this->rotate.x = x; }
+void Object::setRotateY(float y) { this->rotate.y = y; }
+void Object::setRotateZ(float z) { this->rotate.z = z; }
+
+glm::vec3 Object::getPos() { return pos; }
+glm::vec3 Object::getScale() { return scale; }
+glm::vec3 Object::getRotate() { return rotate; }
 
 void Object::setModelPos(vector<float> vertices)
 {
@@ -317,21 +298,21 @@ void Object::initModel(vector<float> vertices, vector<float> colors, vector<GLub
     setModelIndices(indices);
 
     // Test
-    cout << "vertices: " << endl;
-    for (int i = 0; i < this->vertices.size(); i += 3)
-    {
-        cout << this->vertices[i] << " " << this->vertices[i + 1] << " " << this->vertices[i + 2] << endl;
-    }
-    cout << "colors: " << endl;
-    for (int i = 0; i < this->colors.size(); i += 3)
-    {
-        cout << this->colors[i] << " " << this->colors[i + 1] << " " << this->colors[i + 2] << endl;
-    }
-    cout << "indices: " << endl;
-    for (int i = 0; i < this->indices.size(); i += 3)
-    {
-        cout << this->indices[i] << " " << this->indices[i + 1] << " " << this->indices[i + 2] << endl;
-    }
+    // cout << "vertices: " << endl;
+    // for (int i = 0; i < this->vertices.size(); i += 3)
+    // {
+    //     cout << this->vertices[i] << " " << this->vertices[i + 1] << " " << this->vertices[i + 2] << endl;
+    // }
+    // cout << "colors: " << endl;
+    // for (int i = 0; i < this->colors.size(); i += 3)
+    // {
+    //     cout << this->colors[i] << " " << this->colors[i + 1] << " " << this->colors[i + 2] << endl;
+    // }
+    // cout << "indices: " << endl;
+    // for (int i = 0; i < this->indices.size(); i += 3)
+    // {
+    //     cout << this->indices[i] << " " << this->indices[i + 1] << " " << this->indices[i + 2] << endl;
+    // }
 }
 
 void Object::init()
