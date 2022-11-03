@@ -111,8 +111,11 @@ public:
     void render(GLuint shaderProgramID) override;
 
     // Animation
-    void pyramidOpen();
+    void transUpward();
+    void transDownward();
+
     void setAngle(float angle) { _openAngle = angle; }
+    float getOpenAngle() { return _openAngle; }
 
 } Pyramid;
 
@@ -178,6 +181,8 @@ int cube_sideFace = CLOSE;
 
 int pyramid_pointDirection = UPWARD;
 bool is_pyramid_animation = false;
+
+bool pyramid_selected = false;
 #pragma endregion
 
 #pragma region "Animation"
@@ -189,6 +194,8 @@ void cube_frontFaceClose(int value);
 
 void cube_sideFaceOpen(int value);
 void cube_sideFaceClose(int value);
+
+void pyramid_animation(int value);
 
 #pragma endregion
 
@@ -257,7 +264,7 @@ GLvoid drawScene()
     coord.render(shaderProgramID);
 
     // draw cube
-    if (is_pyramid_animation)
+    if (pyramid_selected)
         pyramid.render(shaderProgramID);
     else
     {
@@ -303,6 +310,7 @@ GLvoid keyboard(unsigned char key, int x, int y)
         break;
 
     case 'y': // y-axis revolution
+        pyramid_selected = false;
         if (is_cube_yAxisRotation)
         {
             is_cube_yAxisRotation = false;
@@ -315,6 +323,7 @@ GLvoid keyboard(unsigned char key, int x, int y)
         break;
 
     case 't': // cube upper face rotation animation
+        pyramid_selected = false;
         if (is_cube_upperFaceRotation)
         {
             is_cube_upperFaceRotation = false;
@@ -327,6 +336,7 @@ GLvoid keyboard(unsigned char key, int x, int y)
         break;
 
     case 'f': // cube front face open/close
+        pyramid_selected = false;
         if (cube_frontFace == CLOSE)
         {
             cube_frontFace = ANIMATION;
@@ -340,6 +350,7 @@ GLvoid keyboard(unsigned char key, int x, int y)
         break;
 
     case '1': // cube side face open/close
+        pyramid_selected = false;
         if (cube_sideFace == CLOSE)
         {
             cube_sideFace = ANIMATION;
@@ -353,15 +364,16 @@ GLvoid keyboard(unsigned char key, int x, int y)
         break;
 
     case 'o': // pyramid upward/downward
-        if (is_pyramid_animation)
-        {
-            is_pyramid_animation = false;
-        }
-        else if (!is_pyramid_animation)
+        pyramid_selected = true;
+        if (pyramid_pointDirection == UPWARD)
         {
             is_pyramid_animation = true;
-            // pyramid_pointDirection = UPWARD;
-            // pyramid_animation(0);
+            pyramid_animation(0);
+        }
+        else if (pyramid_pointDirection == DOWNWARD)
+        {
+            is_pyramid_animation = true;
+            pyramid_animation(0);
         }
         break;
 
@@ -597,7 +609,7 @@ void Pyramid::draw_pyramid(GLuint shaderProgramID)
 
 void Pyramid::drawBase(GLuint shaderProgramID)
 {
-    transformMat = glm::mat4(1.f);
+    _baseTransform();
     glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(transformMat));
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, (void *)0);
@@ -606,8 +618,9 @@ void Pyramid::drawBase(GLuint shaderProgramID)
 void Pyramid::drawFront(GLuint shaderProgramID)
 {
     _baseTransform();
-    transformMat = glm::rotate(transformMat, glm::radians(_openAngle), glm::vec3(1.0f, 0.0f, 0.0f));
-    transformMat = glm::translate(transformMat, glm::vec3(0.f, 0.f, .5f));
+    transformMat = glm::translate(transformMat, glm::vec3(.5f, 0.f, 0.f));
+    transformMat = glm::rotate(transformMat, glm::radians(-_openAngle), glm::vec3(0.0f, 0.0f, 1.0f));
+    transformMat = glm::translate(transformMat, glm::vec3(-.5f, 0.f, 0.f));
 
     glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(transformMat));
 
@@ -617,6 +630,10 @@ void Pyramid::drawFront(GLuint shaderProgramID)
 void Pyramid::drawBack(GLuint shaderProgramID)
 {
     _baseTransform();
+    transformMat = glm::translate(transformMat, glm::vec3(-.5f, 0.f, 0.f));
+    transformMat = glm::rotate(transformMat, glm::radians(_openAngle), glm::vec3(0.0f, 0.0f, 1.0f));
+    transformMat = glm::translate(transformMat, glm::vec3(.5f, 0.f, 0.f));
+
     glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(transformMat));
 
     glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_BYTE, (void *)(9 * sizeof(GLubyte)));
@@ -625,6 +642,10 @@ void Pyramid::drawBack(GLuint shaderProgramID)
 void Pyramid::drawLeft(GLuint shaderProgramID)
 {
     _baseTransform();
+    transformMat = glm::translate(transformMat, glm::vec3(0.f, 0.f, -.5f));
+    transformMat = glm::rotate(transformMat, glm::radians(-_openAngle), glm::vec3(1.0f, 0.0f, 0.0f));
+    transformMat = glm::translate(transformMat, glm::vec3(0.f, 0.f, .5f));
+
     glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(transformMat));
 
     glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_BYTE, (void *)(12 * sizeof(GLubyte)));
@@ -633,6 +654,10 @@ void Pyramid::drawLeft(GLuint shaderProgramID)
 void Pyramid::drawRight(GLuint shaderProgramID)
 {
     _baseTransform();
+    transformMat = glm::translate(transformMat, glm::vec3(0.f, 0.f, .5f));
+    transformMat = glm::rotate(transformMat, glm::radians(_openAngle), glm::vec3(1.0f, 0.0f, 0.0f));
+    transformMat = glm::translate(transformMat, glm::vec3(0.f, 0.f, -.5f));
+
     glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(transformMat));
 
     glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_BYTE, (void *)(15 * sizeof(GLubyte)));
@@ -646,4 +671,35 @@ void Pyramid::_baseTransform()
     transformMat = glm::rotate(transformMat, glm::radians(rotate.y), glm::vec3(0.f, 1.f, 0.f));
     transformMat = glm::rotate(transformMat, glm::radians(rotate.z), glm::vec3(0.f, 0.f, 1.f));
     transformMat = glm::scale(transformMat, scale);
+}
+
+void Pyramid::transDownward() { _openAngle += 0.1f; }
+void Pyramid::transUpward() { _openAngle -= 0.1f; }
+
+void pyramid_animation(int value)
+{
+    if (is_pyramid_animation)
+    {
+        if (pyramid_pointDirection == UPWARD)
+        {
+            pyramid.transDownward();
+            if (pyramid.getOpenAngle() >= 233.f)
+            {
+                pyramid_pointDirection = DOWNWARD;
+                is_pyramid_animation = false;
+            }
+            glutTimerFunc(5, pyramid_animation, 0);
+        }
+        else if (pyramid_pointDirection == DOWNWARD)
+        {
+            pyramid.transUpward();
+            if (pyramid.getOpenAngle() <= 0.f)
+            {
+                pyramid_pointDirection = UPWARD;
+                is_pyramid_animation = false;
+            }
+            glutTimerFunc(5, pyramid_animation, 0);
+        }
+    }
+    glutPostRedisplay();
 }
