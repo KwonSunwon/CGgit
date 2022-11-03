@@ -46,6 +46,7 @@ const vector<float> coordColor = {
     0.f, 1.f, 0.f,
     1.f, 0.f, 0.f,
     1.f, 0.f, 0.f};
+
 Coord coord{coordModel, coordColor};
 
 void initCoord();
@@ -94,14 +95,51 @@ void initCube();
 typedef class Pyramid : public Object
 {
 private:
-    Object *base;
-    Object *front;
-    Object *back;
-    Object *left;
-    Object *right;
+    float _openAngle;
+
+    void _baseTransform();
+
+    void draw_pyramid(GLuint shaderProgramID);
+    void drawBase(GLuint shaderProgramID);
+    void drawFront(GLuint shaderProgramID);
+    void drawBack(GLuint shaderProgramID);
+    void drawLeft(GLuint shaderProgramID);
+    void drawRight(GLuint shaderProgramID);
 
 public:
+    Pyramid(vector<float> vertices, vector<float> colors, vector<GLubyte> indices) : Object(vertices, colors, indices){};
+    void render(GLuint shaderProgramID) override;
+
+    // Animation
+    void pyramidOpen();
+    void setAngle(float angle) { _openAngle = angle; }
+
 } Pyramid;
+
+vector<float> pyramidModel = {
+    -0.5f, 0.f, -0.5f,
+    0.5f, 0.f, -0.5f,
+    0.5f, 0.f, 0.5f,
+    -0.5f, 0.f, 0.5f,
+    0.0f, 1.f, 0.0f};
+vector<GLubyte> pyramidIndices = {
+    0, 1, 2, // floor
+    0, 2, 3, // floor2
+    1, 2, 4, // front
+    3, 0, 4, // back
+    0, 1, 4, // left
+    2, 3, 4, // right
+};
+vector<float> pyramidColor = {
+    1.0f, 0.0f, 0.0f,
+    1.0f, 1.0f, 0.0f,
+    0.0f, 1.0f, 0.0f,
+    0.0f, 1.0f, 1.0f,
+    0.0f, 0.0f, 1.0f};
+
+Pyramid pyramid{pyramidModel, pyramidColor, pyramidIndices};
+
+void initPyramid();
 
 #pragma endregion
 
@@ -216,13 +254,17 @@ GLvoid drawScene()
     glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "view"), 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
-    // draw coordinate
     coord.render(shaderProgramID);
 
     // draw cube
-    cube[FRONT].frontRender(shaderProgramID);
-    for (int i = 1; i < 6; i++)
-        cube[i].render(shaderProgramID);
+    if (is_pyramid_animation)
+        pyramid.render(shaderProgramID);
+    else
+    {
+        cube[FRONT].frontRender(shaderProgramID);
+        for (int i = 1; i < 6; i++)
+            cube[i].render(shaderProgramID);
+    }
 
     glutSwapBuffers();
 }
@@ -311,6 +353,16 @@ GLvoid keyboard(unsigned char key, int x, int y)
         break;
 
     case 'o': // pyramid upward/downward
+        if (is_pyramid_animation)
+        {
+            is_pyramid_animation = false;
+        }
+        else if (!is_pyramid_animation)
+        {
+            is_pyramid_animation = true;
+            // pyramid_pointDirection = UPWARD;
+            // pyramid_animation(0);
+        }
         break;
 
     case 'Q':
@@ -340,6 +392,7 @@ void init()
     initCamera();
     initCoord();
     initCube();
+    initPyramid();
 }
 
 #pragma region "Coordination"
@@ -518,3 +571,79 @@ void cube_sideFaceClose(int value)
 }
 
 #pragma endregion
+
+void initPyramid()
+{
+    pyramid.init();
+    pyramid.setRotate(glm::vec3(30.f, 30.f, 0.f));
+    pyramid.setAngle(0.f);
+}
+
+void Pyramid::render(GLuint shaderProgramID)
+{
+    draw_pyramid(shaderProgramID);
+}
+
+void Pyramid::draw_pyramid(GLuint shaderProgramID)
+{
+    glBindVertexArray(vao);
+
+    drawBase(shaderProgramID);
+    drawFront(shaderProgramID);
+    drawBack(shaderProgramID);
+    drawLeft(shaderProgramID);
+    drawRight(shaderProgramID);
+}
+
+void Pyramid::drawBase(GLuint shaderProgramID)
+{
+    transformMat = glm::mat4(1.f);
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(transformMat));
+
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, (void *)0);
+}
+
+void Pyramid::drawFront(GLuint shaderProgramID)
+{
+    _baseTransform();
+    transformMat = glm::rotate(transformMat, glm::radians(_openAngle), glm::vec3(1.0f, 0.0f, 0.0f));
+    transformMat = glm::translate(transformMat, glm::vec3(0.f, 0.f, .5f));
+
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(transformMat));
+
+    glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_BYTE, (void *)(6 * sizeof(GLubyte)));
+}
+
+void Pyramid::drawBack(GLuint shaderProgramID)
+{
+    _baseTransform();
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(transformMat));
+
+    glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_BYTE, (void *)(9 * sizeof(GLubyte)));
+}
+
+void Pyramid::drawLeft(GLuint shaderProgramID)
+{
+    _baseTransform();
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(transformMat));
+
+    glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_BYTE, (void *)(12 * sizeof(GLubyte)));
+}
+
+void Pyramid::drawRight(GLuint shaderProgramID)
+{
+    _baseTransform();
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(transformMat));
+
+    glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_BYTE, (void *)(15 * sizeof(GLubyte)));
+}
+
+void Pyramid::_baseTransform()
+{
+    transformMat = glm::mat4(1.f);
+    transformMat = glm::translate(transformMat, pos);
+    transformMat = glm::rotate(transformMat, glm::radians(rotate.x), glm::vec3(1.f, 0.f, 0.f));
+    transformMat = glm::rotate(transformMat, glm::radians(rotate.y), glm::vec3(0.f, 1.f, 0.f));
+    transformMat = glm::rotate(transformMat, glm::radians(rotate.z), glm::vec3(0.f, 0.f, 1.f));
+    transformMat = glm::scale(transformMat, scale);
+}

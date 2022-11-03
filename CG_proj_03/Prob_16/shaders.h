@@ -86,7 +86,7 @@ public:
 
     virtual void transform(GLuint shaderProgramID);
     virtual void draw();
-    void render(GLuint shaderProgramID);
+    virtual void render(GLuint shaderProgramID);
 
     // Setters
     void setPos(glm::vec3 pos);
