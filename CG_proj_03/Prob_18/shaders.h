@@ -31,6 +31,10 @@ public:
     void setCenter(glm::vec3 center);
     void setUp(glm::vec3 up);
 
+    glm::vec3 getEye();
+    glm::vec3 getCenter();
+    glm::vec3 getUp();
+
     void setFovy(float fovy);
     void setAspect(float aspect);
     void setzNear(float zNear);
@@ -41,13 +45,11 @@ public:
     void setBottom(float bottom);
     void setTop(float top);
 
-    // glm::mat4 getView();
-    // glm::mat4 getProjection();
-
-    void setCamera();
+    void setCamera(GLuint shaderProgramID, int type); // 0: Perspective, 1: Ortho
     glm::mat4 getView();
     glm::mat4 getProjection();
     glm::mat4 getOrtho();
+
 } Camera;
 
 typedef class Object
@@ -66,7 +68,7 @@ protected:
     vector<float> colors;
     vector<GLubyte> indices;
 
-    glm::mat4 transformMat;
+    glm::mat4 model;
 
 public:
     Object();
@@ -84,9 +86,7 @@ public:
     void initModel(vector<float> vertices, vector<float> colors);
     void initModel(vector<float> vertices, vector<float> colors, vector<GLubyte> indices);
 
-    virtual void transform(GLuint shaderProgramID);
-    virtual void draw();
-    virtual void render(GLuint shaderProgramID);
+    virtual void render(GLuint shaderProgramID){};
 
     // Setters
     void setPos(glm::vec3 pos);

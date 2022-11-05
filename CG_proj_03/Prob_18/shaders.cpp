@@ -120,79 +120,44 @@ Camera::Camera()
     top = 1.0f;
 }
 
-void Camera::setCamera()
+void Camera::setCamera(GLuint shaderProgramID, int type) // 0 = perspective, 1 = ortho
 {
     view = glm::lookAt(eye, center, up);
     projection = glm::perspective(fovy, aspect, zNear, zFar);
     ortho = glm::ortho(left, right, bottom, top, zNear, zFar);
 
-    // test
-    // cout << eye.x << " " << eye.y << " " << eye.z << endl;
-    // cout << center.x << " " << center.y << " " << center.z << endl;
-    // cout << up.x << " " << up.y << " " << up.z << endl;
-    // cout << fovy << " " << aspect << " " << zNear << " " << zFar << endl;
-    // cout << left << " " << right << " " << bottom << " " << top << endl;
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+    if (type == 0)
+    {
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+    }
+    else if (type == 1)
+    {
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "projection"), 1, GL_FALSE, glm::value_ptr(ortho));
+    }
 }
 
-void Camera::setEye(glm::vec3 eye)
-{
-    this->eye = eye;
-}
-void Camera::setCenter(glm::vec3 center)
-{
-    this->center = center;
-}
-void Camera::setUp(glm::vec3 up)
-{
-    this->up = up;
-}
+void Camera::setEye(glm::vec3 eye) { this->eye = eye; }
+void Camera::setCenter(glm::vec3 center) { this->center = center; }
+void Camera::setUp(glm::vec3 up) { this->up = up; }
 
-void Camera::setFovy(float fovy)
-{
-    this->fovy = fovy;
-}
-void Camera::setAspect(float aspect)
-{
-    this->aspect = aspect;
-}
-void Camera::setzNear(float zNear)
-{
-    this->zNear = zNear;
-}
-void Camera::setzFar(float zFar)
-{
-    this->zFar = zFar;
-}
+glm::vec3 Camera::getEye() { return eye; }
+glm::vec3 Camera::getCenter() { return center; }
+glm::vec3 Camera::getUp() { return up; }
 
-void Camera::setLeft(float left)
-{
-    this->left = left;
-}
-void Camera::setRight(float right)
-{
-    this->right = right;
-}
-void Camera::setBottom(float bottom)
-{
-    this->bottom = bottom;
-}
-void Camera::setTop(float top)
-{
-    this->top = top;
-}
+void Camera::setFovy(float fovy) { this->fovy = fovy; }
+void Camera::setAspect(float aspect) { this->aspect = aspect; }
+void Camera::setzNear(float zNear) { this->zNear = zNear; }
+void Camera::setzFar(float zFar) { this->zFar = zFar; }
 
-glm::mat4 Camera::getView()
-{
-    return view;
-}
-glm::mat4 Camera::getProjection()
-{
-    return projection;
-}
-glm::mat4 Camera::getOrtho()
-{
-    return ortho;
-}
+void Camera::setLeft(float left) { this->left = left; }
+void Camera::setRight(float right) { this->right = right; }
+void Camera::setBottom(float bottom) { this->bottom = bottom; }
+void Camera::setTop(float top) { this->top = top; }
+
+glm::mat4 Camera::getView() { return view; }
+glm::mat4 Camera::getProjection() { return projection; }
+glm::mat4 Camera::getOrtho() { return ortho; }
 #pragma endregion
 
 #pragma region "ObjectClass"
@@ -273,23 +238,6 @@ void Object::initModel(vector<float> vertices, vector<float> colors, vector<GLub
     setModelPos(vertices);
     setModelColor(colors);
     setModelIndices(indices);
-
-    // Test
-    // cout << "vertices: " << endl;
-    // for (int i = 0; i < this->vertices.size(); i += 3)
-    // {
-    //     cout << this->vertices[i] << " " << this->vertices[i + 1] << " " << this->vertices[i + 2] << endl;
-    // }
-    // cout << "colors: " << endl;
-    // for (int i = 0; i < this->colors.size(); i += 3)
-    // {
-    //     cout << this->colors[i] << " " << this->colors[i + 1] << " " << this->colors[i + 2] << endl;
-    // }
-    // cout << "indices: " << endl;
-    // for (int i = 0; i < this->indices.size(); i += 3)
-    // {
-    //     cout << this->indices[i] << " " << this->indices[i + 1] << " " << this->indices[i + 2] << endl;
-    // }
 }
 
 void Object::init()
@@ -321,31 +269,6 @@ void Object::initBuffer()
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size(), &indices[0], GL_STATIC_DRAW);
     }
-}
-
-void Object::transform(GLuint shaderProgramID)
-{
-    transformMat = glm::mat4(1.f);
-    transformMat = glm::translate(transformMat, pos);
-    transformMat = glm::rotate(transformMat, glm::radians(rotate.x), glm::vec3(1.f, 0.f, 0.f));
-    transformMat = glm::rotate(transformMat, glm::radians(rotate.y), glm::vec3(0.f, 1.f, 0.f));
-    transformMat = glm::rotate(transformMat, glm::radians(rotate.z), glm::vec3(0.f, 0.f, 1.f));
-    transformMat = glm::scale(transformMat, scale);
-
-    glUniformMatrix4fv(glGetAttribLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(transformMat));
-}
-
-void Object::draw()
-{
-    glBindVertexArray(vao);
-    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_BYTE, (void *)0);
-}
-
-void Object::render(GLuint shaderProgramID)
-{
-    glUseProgram(shaderProgramID);
-    transform(shaderProgramID);
-    draw();
 }
 
 #pragma endregion
