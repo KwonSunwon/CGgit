@@ -73,7 +73,7 @@ public:
     Object(vector<float> vertices, vector<float> colors);
     Object(vector<float> vertices, vector<float> colors, vector<GLubyte> indices);
 
-    void init();
+    virtual void init();
     void initPos();
     void initBuffer();
 

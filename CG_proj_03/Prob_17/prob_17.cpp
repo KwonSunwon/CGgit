@@ -4,158 +4,80 @@
 #define PERSP 0
 #define ORTHO 1
 
-#define CLOSE 0
-#define OPEN 1
-#define ANIMATION 2
+#define SOLID 0
+#define WIREFRAME 1
 
-#define UPWARD 0
-#define DOWNWARD 1
+#define LEFT 0
+#define RIGHT 1
+#define DOWN 2
+#define UP 3
+#define NEAR 4
+#define FAR 5
 
-// Cube index
-#define FRONT 0
-#define BACK 1
-#define LEFT 2
-#define RIGHT 3
-#define TOP 4
-#define BOTTOM 5
-
-#pragma region "Coordinate"
-
-typedef class Coord : public Object
-{
-public:
-    Coord(vector<float> vertices, vector<float> colors) : Object(vertices, colors){};
-
-    void transform(GLuint shaderProgramID) override;
-    void draw() override;
-} Coord;
-
-const vector<float> coordModel = {
-    -1.f, 0.0f, 0.0f,
-    1.f, 0.0f, 0.0f,
-
-    0.0f, 0.0f, -1.f,
-    0.0f, 0.0f, 1.f,
-
-    0.0f, -1.f, 0.0f,
-    0.0f, 1.f, 0.0f};
-const vector<float> coordColor = {
-    0.f, 0.f, 1.f,
-    0.f, 0.f, 1.f,
-    0.f, 1.f, 0.f,
-    0.f, 1.f, 0.f,
-    1.f, 0.f, 0.f,
-    1.f, 0.f, 0.f};
-
-Coord coord{coordModel, coordColor};
-
-void initCoord();
-
-#pragma endregion
-
-#pragma region "Cube"
-typedef class Panel : public Object
-{
-public:
-    Panel(vector<float> vertices, vector<float> colors, vector<GLubyte> indices) : Object(vertices, colors, indices){};
-
-    void transform(GLuint shaderProgramID) override;
-    void frontTransform(GLuint shaderProgramID);
-    void frontRender(GLuint shaderProgramID);
-} Panel;
-
-const vector<float> panelModel = {
-    -.5f, 0.f, .5f,
-    -.5f, 0.f, -.5f,
-    .5f, 0.f, -.5f,
-    .5f, 0.f, .5f};
-const vector<float> panelColor = {
-    1.f, 0.f, 1.f,
-    0.f, 0.f, 1.f,
-    0.f, 1.f, 0.f,
-    1.f, 1.f, 0.f};
-const vector<GLubyte> panelIndices = {
-    0, 1, 2,
-    0, 2, 3};
-
-Panel cube[6] = {
-    Panel(panelModel, panelColor, panelIndices),
-    Panel(panelModel, panelColor, panelIndices),
-    Panel(panelModel, panelColor, panelIndices),
-    Panel(panelModel, panelColor, panelIndices),
-    Panel(panelModel, panelColor, panelIndices),
-    Panel(panelModel, panelColor, panelIndices)};
-
-void initCube();
-
-#pragma endregion
-
-#pragma region "Pyramid"
-
-typedef class Pyramid : public Object
+typedef class Planet : public Object
 {
 private:
-    float _openAngle;
+    int objectType;
 
-    void _baseTransform();
+    GLUquadricObj *sphere;
 
-    void draw_pyramid(GLuint shaderProgramID);
-    void drawBase(GLuint shaderProgramID);
-    void drawFront(GLuint shaderProgramID);
-    void drawBack(GLuint shaderProgramID);
-    void drawLeft(GLuint shaderProgramID);
-    void drawRight(GLuint shaderProgramID);
+    glm::mat4 model_star;
+
+    glm::vec3 earth_color[3];
+    glm::vec3 moon_color[3];
+
+    glm::vec3 earth_pos[3];
+
+    glm::mat4 model_earth[3];
+    glm::mat4 model_earth_orbit[3];
+
+    glm::mat4 model_moon[3];
+    glm::mat4 model_moon_orbit[3];
+
+    float angle_earth[3];
+    float angle_moon[3];
+
+    float radius_earth;
+    float radius_moon;
+
+    // use vao
+    vector<float> orbit_vertices;
+
+    // draw functions
+    void drawOrbit(GLuint shaderProgramID);
+    void drawOrbitMoon(int idx, GLuint shaderProgramID);
+    void drawStar(GLuint shaderProgramID);
+    void drawEarth(int idx, GLuint shaderProgramID);
+    void drawMoon(int idx, GLuint shaderProgramID);
 
 public:
-    Pyramid(vector<float> vertices, vector<float> colors, vector<GLubyte> indices) : Object(vertices, colors, indices){};
-    void render(GLuint shaderProgramID) override;
+    Planet();
+    void init() override;
+    void initPlanet();
+    void initOrbitBuffer(GLuint shaderProgramID);
 
-    // Animation
-    void transUpward();
-    void transDownward();
+    void draw_all(GLuint shaderProgramID);
 
-    void setAngle(float angle) { _openAngle = angle; }
-    float getOpenAngle() { return _openAngle; }
+    void update();
 
-} Pyramid;
+    void movement(int direction);
+    void objectTypeChange(int type);
+    int getObjectType();
 
-vector<float> pyramidModel = {
-    -0.5f, 0.f, -0.5f,
-    0.5f, 0.f, -0.5f,
-    0.5f, 0.f, 0.5f,
-    -0.5f, 0.f, 0.5f,
-    0.0f, 1.f, 0.0f};
-vector<GLubyte> pyramidIndices = {
-    0, 1, 2, // floor
-    0, 2, 3, // floor2
-    1, 2, 4, // front
-    3, 0, 4, // back
-    0, 1, 4, // left
-    2, 3, 4, // right
-};
-vector<float> pyramidColor = {
-    1.0f, 0.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
-    0.0f, 1.0f, 0.0f,
-    0.0f, 1.0f, 1.0f,
-    0.0f, 0.0f, 1.0f};
+    void rotateY(int direction);
 
-Pyramid pyramid{pyramidModel, pyramidColor, pyramidIndices};
+} Planet;
 
-void initPyramid();
-
-#pragma endregion
+Planet planet;
 
 Camera camera;
 void initCamera();
 
-#pragma region "GLfunctions"
+void init();
+
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
 GLvoid keyboard(unsigned char key, int x, int y);
-#pragma endregion
-
-void init();
 
 GLclampf g_color[4] = {.5f, .5f, .5f, 1.0f};
 
@@ -166,38 +88,12 @@ glm::mat4 model;
 glm::mat4 view;
 glm::mat4 projection;
 
-// object variables
-float xAngle = 30.f;
-float yAngle = 30.f;
+// variables
+int projectionType;
+bool isRotatePositive = false;
+bool isRotateNegative = false;
 
-#pragma region "Toggles"
-bool is_DepthTest = true;
-int projectionType = PERSP;
-
-bool is_cube_yAxisRotation = false;
-bool is_cube_upperFaceRotation = false;
-int cube_frontFace = CLOSE;
-int cube_sideFace = CLOSE;
-
-int pyramid_pointDirection = UPWARD;
-bool is_pyramid_animation = false;
-
-bool pyramid_selected = false;
-#pragma endregion
-
-#pragma region "Animation"
-void cube_yAxisRotation(int value);
-void cube_upperFaceRotation(int value);
-
-void cube_frontFaceOpen(int value);
-void cube_frontFaceClose(int value);
-
-void cube_sideFaceOpen(int value);
-void cube_sideFaceClose(int value);
-
-void pyramid_animation(int value);
-
-#pragma endregion
+void updateTimer(int value);
 
 void main(int argc, char **argv)
 {
@@ -221,21 +117,12 @@ void main(int argc, char **argv)
     char fragmentFile[] = "fragment.frag";
     shaderProgramID = initShader(vertexFile, fragmentFile);
 
-    cout << "\n";
-    cout << "h : Depth Test\n";
-    cout << "p : Projection Type\n";
-    cout << "\n";
-    cout << "y : Cube Y-Axis Rotation\n";
-    cout << "t : Cube Upper Face Rotation\n";
-    cout << "f : Cube Front Face Open/Close\n";
-    cout << "1 : Cube Side Face Open/Close\n";
-    cout << "\n";
-    cout << "o : Pyramid Animation\n";
-    cout << "\n";
-    cout << "q : Quit\n";
-
     // Initialize
     init();
+
+    planet.init();
+
+    updateTimer(0);
 
     glutKeyboardFunc(keyboard);
     glutDisplayFunc(drawScene);
@@ -255,23 +142,12 @@ GLvoid drawScene()
         projection = camera.getProjection();
     else
         projection = camera.getOrtho();
-
     view = camera.getView();
-
     glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "view"), 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
-    coord.render(shaderProgramID);
-
-    // draw cube
-    if (pyramid_selected)
-        pyramid.render(shaderProgramID);
-    else
-    {
-        cube[FRONT].frontRender(shaderProgramID);
-        for (int i = 1; i < 6; i++)
-            cube[i].render(shaderProgramID);
-    }
+    // Object Draw
+    planet.draw_all(shaderProgramID);
 
     glutSwapBuffers();
 }
@@ -285,96 +161,62 @@ GLvoid keyboard(unsigned char key, int x, int y)
 {
     switch (key)
     {
-    case 'h': // depth test
-        if (is_DepthTest)
-        {
-            is_DepthTest = false;
-            glEnable(GL_DEPTH_TEST);
-        }
-        else
-        {
-            is_DepthTest = true;
-            glDisable(GL_DEPTH_TEST);
-        }
-        break;
-
-    case 'p': // ortho/perspective projection
+    // Camera type
+    case 'p':
         if (projectionType == PERSP)
-        {
             projectionType = ORTHO;
+        else
+            projectionType = PERSP;
+        break;
+
+    // Object type Solid/Wireframe
+    case 'm':
+        if (planet.getObjectType() == SOLID)
+            planet.objectTypeChange(WIREFRAME);
+        else
+            planet.objectTypeChange(SOLID);
+        break;
+
+    // Object Movement
+    case 'w':
+        planet.movement(UP);
+        break;
+    case 'a':
+        planet.movement(LEFT);
+        break;
+    case 's':
+        planet.movement(DOWN);
+        break;
+    case 'd':
+        planet.movement(RIGHT);
+        break;
+    case 'z':
+        planet.movement(NEAR);
+        break;
+    case 'x':
+        planet.movement(FAR);
+        break;
+
+    // Object Rotation
+    case 'y': // positive
+        if (!isRotatePositive)
+        {
+            if (isRotateNegative)
+                isRotateNegative = false;
+            isRotatePositive = true;
         }
         else
-        {
-            projectionType = PERSP;
-        }
+            isRotatePositive = false;
         break;
-
-    case 'y': // y-axis revolution
-        pyramid_selected = false;
-        if (is_cube_yAxisRotation)
+    case 'Y': // negative
+        if (!isRotateNegative)
         {
-            is_cube_yAxisRotation = false;
+            if (isRotatePositive)
+                isRotatePositive = false;
+            isRotateNegative = true;
         }
-        else if (!is_cube_yAxisRotation)
-        {
-            is_cube_yAxisRotation = true;
-            cube_yAxisRotation(0);
-        }
-        break;
-
-    case 't': // cube upper face rotation animation
-        pyramid_selected = false;
-        if (is_cube_upperFaceRotation)
-        {
-            is_cube_upperFaceRotation = false;
-        }
-        else if (!is_cube_upperFaceRotation)
-        {
-            is_cube_upperFaceRotation = true;
-            cube_upperFaceRotation(0);
-        }
-        break;
-
-    case 'f': // cube front face open/close
-        pyramid_selected = false;
-        if (cube_frontFace == CLOSE)
-        {
-            cube_frontFace = ANIMATION;
-            cube_frontFaceOpen(0);
-        }
-        else if (cube_frontFace == OPEN)
-        {
-            cube_frontFace = ANIMATION;
-            cube_frontFaceClose(0);
-        }
-        break;
-
-    case '1': // cube side face open/close
-        pyramid_selected = false;
-        if (cube_sideFace == CLOSE)
-        {
-            cube_sideFace = ANIMATION;
-            cube_sideFaceOpen(0);
-        }
-        else if (cube_sideFace == OPEN)
-        {
-            cube_sideFace = ANIMATION;
-            cube_sideFaceClose(0);
-        }
-        break;
-
-    case 'o': // pyramid upward/downward
-        pyramid_selected = true;
-        if (pyramid_pointDirection == UPWARD)
-        {
-            is_pyramid_animation = true;
-            pyramid_animation(0);
-        }
-        else if (pyramid_pointDirection == DOWNWARD)
-        {
-            is_pyramid_animation = true;
-            pyramid_animation(0);
-        }
+        else
+            isRotateNegative = false;
         break;
 
     case 'Q':
@@ -402,304 +244,290 @@ void initCamera()
 void init()
 {
     initCamera();
-    initCoord();
-    initCube();
-    initPyramid();
 }
 
-#pragma region "Coordination"
-
-void Coord::transform(GLuint shaderProgramID)
+Planet::Planet()
 {
-    transformMat = glm::mat4(1.f);
-    transformMat = glm::rotate(transformMat, glm::radians(rotate.x), glm::vec3(1.0f, 0.0f, 0.0f));
-    transformMat = glm::rotate(transformMat, glm::radians(rotate.y), glm::vec3(0.0f, 1.0f, 0.0f));
-    transformMat = glm::scale(transformMat, scale);
+    objectType = SOLID;
 
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(transformMat));
+    model_star = glm::mat4(1.0f);
+    for (int i = 0; i < 3; i++)
+    {
+        model_earth[i] = glm::mat4(1.0f);
+        model_moon[i] = glm::mat4(1.0f);
+    }
+
+    model_earth_orbit[0] = glm::mat4(1.0f);
+
+    model_earth_orbit[1] = glm::mat4(1.0f);
+    model_earth_orbit[1] = glm::rotate(model_earth_orbit[1], glm::radians(45.0f), glm::vec3(.0f, .0f, 1.0f));
+
+    model_earth_orbit[2] = glm::mat4(1.0f);
+    model_earth_orbit[2] = glm::rotate(model_earth_orbit[2], glm::radians(-45.0f), glm::vec3(.0f, .0f, 1.0f));
+
+    model_moon_orbit[0] = glm::mat4(1.0f);
+
+    model_moon_orbit[1] = glm::mat4(1.0f);
+    model_moon_orbit[1] = glm::rotate(model_moon_orbit[1], glm::radians(-45.0f), glm::vec3(.0f, .0f, 1.0f));
+
+    model_moon_orbit[2] = glm::mat4(1.0f);
+    model_moon_orbit[2] = glm::rotate(model_moon_orbit[2], glm::radians(45.0f), glm::vec3(.0f, .0f, 1.0f));
+
+    angle_earth[0] = 0.f;
+    angle_earth[1] = 90.f;
+    angle_earth[2] = 180.f;
+
+    angle_moon[0] = 0.0f;
+    angle_moon[1] = 0.0f;
+    angle_moon[2] = 0.0f;
+
+    radius_earth = 1.3f;
+    radius_moon = .4f;
+
+    earth_color[0] = glm::vec3(0.3f, 0.8f, 1.0f);
+    earth_color[1] = glm::vec3(0.2f, 0.6f, 0.2f);
+    earth_color[2] = glm::vec3(0.8f, 0.5f, 0.0f);
+
+    moon_color[0] = glm::vec3(0.9f, 0.3f, 0.7f);
+    moon_color[1] = glm::vec3(0.1f, 0.2f, 0.3f);
+    moon_color[2] = glm::vec3(0.8f, 0.4f, 0.5f);
+
+    rotate = glm::vec3(10.f, 0.f, 0.f);
 }
 
-void Coord::draw()
+void Planet::init()
 {
+    initPlanet();
+    initOrbitBuffer(shaderProgramID);
+}
+
+void Planet::initPlanet()
+{
+    sphere = gluNewQuadric();
+    gluQuadricDrawStyle(sphere, GLU_FILL);
+    gluQuadricNormals(sphere, GLU_SMOOTH);
+    gluQuadricTexture(sphere, GL_TRUE);
+
+    // orbit
+    float angle = 0;
+    float angleStepSize = 1;
+    float x, y, z;
+    for (angle; angle <= 360; angle += angleStepSize)
+    {
+        x = radius_earth * cos(glm::radians(angle));
+        y = 0.f;
+        z = radius_earth * sin(glm::radians(angle));
+        orbit_vertices.push_back(x);
+        orbit_vertices.push_back(y);
+        orbit_vertices.push_back(z);
+
+        // cout << angle << ": " << x << " " << y << " " << z << endl;
+    }
+
+    for (angle = 0; angle <= 360; angle += angleStepSize)
+    {
+        x = radius_moon * cos(glm::radians(angle));
+        y = 0.f;
+        z = radius_moon * sin(glm::radians(angle));
+        orbit_vertices.push_back(x);
+        orbit_vertices.push_back(y);
+        orbit_vertices.push_back(z);
+
+        // cout << angle << ": " << x << " " << y << " " << z << endl;
+    }
+}
+
+void Planet::initOrbitBuffer(GLuint shaderProgramID)
+{
+    glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
-    glDrawArrays(GL_LINES, 0, 6);
+
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, orbit_vertices.size() * sizeof(float), &orbit_vertices[0], GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+    glEnableVertexAttribArray(0);
 }
 
-void initCoord()
-{
-    coord.setRotate(glm::vec3(30.f, 30.f, 0.f));
-    coord.setScale(glm::vec3(1.2f, 1.2f, 1.2f));
-    coord.initBuffer();
-}
-
-#pragma endregion
-
-#pragma region "Cube"
-void initCube()
-{
-    for (int i = 0; i < 6; ++i)
-    {
-        cube[i].initBuffer();
-    }
-
-    cube[FRONT].setRotate(glm::vec3(90.f, 0.f, 0.f));
-    cube[FRONT].setPos(glm::vec3(0.f, 0.0f, 0.5f));
-
-    cube[BACK].setRotate(glm::vec3(-90.f, 0.f, 0.f));
-    cube[BACK].setPos(glm::vec3(0.f, 0.0f, -0.5f));
-
-    cube[LEFT].setRotate(glm::vec3(0.f, 0.f, -90.f));
-    cube[LEFT].setPos(glm::vec3(-0.5f, 0.0f, 0.f));
-
-    cube[RIGHT].setRotate(glm::vec3(0.f, 0.f, 90.f));
-    cube[RIGHT].setPos(glm::vec3(0.5f, 0.0f, 0.f));
-
-    cube[TOP].setRotate(glm::vec3(0.f, 0.f, 0.f));
-    cube[TOP].setPos(glm::vec3(0.f, .5f, 0.f));
-
-    cube[BOTTOM].setRotate(glm::vec3(0.f, 180.f, 0.f));
-    cube[BOTTOM].setPos(glm::vec3(0.f, -.5f, 0.f));
-}
-
-void Panel::transform(GLuint shaderProgramID)
-{
-    transformMat = glm::mat4(1.f);
-    transformMat = glm::rotate(transformMat, glm::radians(xAngle), glm::vec3(1.0f, 0.0f, 0.0f));
-    transformMat = glm::rotate(transformMat, glm::radians(yAngle), glm::vec3(0.0f, 1.0f, 0.0f));
-    transformMat = glm::translate(transformMat, pos);
-    transformMat = glm::rotate(transformMat, glm::radians(rotate.x), glm::vec3(1.0f, 0.0f, 0.0f));
-    transformMat = glm::rotate(transformMat, glm::radians(rotate.y), glm::vec3(0.0f, 1.0f, 0.0f));
-    transformMat = glm::rotate(transformMat, glm::radians(rotate.z), glm::vec3(0.0f, 0.0f, 1.0f));
-    transformMat = glm::scale(transformMat, scale);
-
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(transformMat));
-}
-
-void Panel::frontTransform(GLuint shaderProgramID)
-{
-    transformMat = glm::mat4(1.f);
-    transformMat = glm::rotate(transformMat, glm::radians(xAngle), glm::vec3(1.0f, 0.0f, 0.0f));
-    transformMat = glm::rotate(transformMat, glm::radians(yAngle), glm::vec3(0.0f, 1.0f, 0.0f));
-    transformMat = glm::translate(transformMat, pos);
-    transformMat = glm::translate(transformMat, glm::vec3(0.f, -.5f, 0.f));
-    transformMat = glm::rotate(transformMat, glm::radians(rotate.x), glm::vec3(1.0f, 0.0f, 0.0f));
-    transformMat = glm::translate(transformMat, glm::vec3(0.f, 0.f, -0.5f));
-    transformMat = glm::scale(transformMat, scale);
-
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(transformMat));
-}
-void Panel::frontRender(GLuint shaderProgramID)
-{
-    frontTransform(shaderProgramID);
-    draw();
-}
-
-void cube_yAxisRotation(int value)
-{
-    if (is_cube_yAxisRotation)
-    {
-        yAngle += 0.5f;
-        glutTimerFunc(20, cube_yAxisRotation, 0);
-    }
-    glutPostRedisplay();
-}
-
-void cube_upperFaceRotation(int value)
-{
-    if (is_cube_upperFaceRotation)
-    {
-        float angle = cube[TOP].getRotate().x;
-        angle += 0.5f;
-        cube[TOP].setRotateX(angle);
-        glutTimerFunc(20, cube_upperFaceRotation, 0);
-    }
-    glutPostRedisplay();
-}
-
-void cube_frontFaceOpen(int value)
-{
-    if (cube_frontFace == ANIMATION)
-    {
-        float angle = cube[FRONT].getRotate().x;
-        angle += 1.f;
-        cube[FRONT].setRotateX(angle);
-        if (angle >= 180.f)
-        {
-            cube_frontFace = OPEN;
-        }
-        glutTimerFunc(20, cube_frontFaceOpen, 0);
-    }
-    glutPostRedisplay();
-}
-
-void cube_frontFaceClose(int value)
-{
-    if (cube_frontFace == ANIMATION)
-    {
-        float angle = cube[FRONT].getRotate().x;
-        angle -= 1.f;
-        cube[FRONT].setRotateX(angle);
-        if (angle <= 90.f)
-        {
-            cube_frontFace = CLOSE;
-        }
-        glutTimerFunc(20, cube_frontFaceClose, 0);
-    }
-    glutPostRedisplay();
-}
-
-void cube_sideFaceOpen(int value)
-{
-    if (cube_sideFace == ANIMATION)
-    {
-        float pos = cube[LEFT].getPos().y;
-        pos += .01f;
-        cube[LEFT].setPosY(pos);
-        cube[RIGHT].setPosY(pos);
-        if (pos >= 1.f)
-        {
-            cube_sideFace = OPEN;
-        }
-        glutTimerFunc(20, cube_sideFaceOpen, 0);
-    }
-    glutPostRedisplay();
-}
-
-void cube_sideFaceClose(int value)
-{
-    if (cube_sideFace == ANIMATION)
-    {
-        float pos = cube[LEFT].getPos().y;
-        pos -= .01f;
-        cube[LEFT].setPosY(pos);
-        cube[RIGHT].setPosY(pos);
-        if (pos <= 0.f)
-        {
-            cube_sideFace = CLOSE;
-        }
-        glutTimerFunc(20, cube_sideFaceClose, 0);
-    }
-    glutPostRedisplay();
-}
-
-#pragma endregion
-
-void initPyramid()
-{
-    pyramid.init();
-    pyramid.setRotate(glm::vec3(30.f, 30.f, 0.f));
-    pyramid.setAngle(0.f);
-}
-
-void Pyramid::render(GLuint shaderProgramID)
-{
-    draw_pyramid(shaderProgramID);
-}
-
-void Pyramid::draw_pyramid(GLuint shaderProgramID)
+void Planet::drawOrbit(GLuint shaderProgramID)
 {
     glBindVertexArray(vao);
 
-    drawBase(shaderProgramID);
-    drawFront(shaderProgramID);
-    drawBack(shaderProgramID);
-    drawLeft(shaderProgramID);
-    drawRight(shaderProgramID);
+    glUniform3f(glGetUniformLocation(shaderProgramID, "color"), 1.f, 1.f, 1.f);
+
+    glm::mat4 model = transformMat;
+
+    // draw orbit 1 - xz plane
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(model * model_earth_orbit[0]));
+    glDrawArrays(GL_LINE_LOOP, 0, 360);
+
+    // draw orbit 2 - xz plane (45 degree)
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(model * model_earth_orbit[1]));
+    glDrawArrays(GL_LINE_LOOP, 0, 360);
+
+    // draw orbit 3 - xz plane (-45 degree)
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(model * model_earth_orbit[2]));
+    glDrawArrays(GL_LINE_LOOP, 0, 360);
 }
 
-void Pyramid::drawBase(GLuint shaderProgramID)
+void Planet::draw_all(GLuint shaderProgramID)
 {
-    _baseTransform();
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(transformMat));
+    if (objectType == SOLID)
+    {
+        gluQuadricDrawStyle(sphere, GLU_FILL);
+    }
+    else if (objectType == WIREFRAME)
+    {
+        gluQuadricDrawStyle(sphere, GLU_LINE);
+    }
 
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, (void *)0);
+    // Draw Star
+    drawStar(shaderProgramID);
+    drawOrbit(shaderProgramID);
+
+    for (int i = 0; i < 3; i++)
+    {
+        drawEarth(i, shaderProgramID);
+        drawOrbitMoon(i, shaderProgramID);
+        drawMoon(i, shaderProgramID);
+    }
 }
 
-void Pyramid::drawFront(GLuint shaderProgramID)
+void Planet::drawStar(GLuint shaderProgramID)
 {
-    _baseTransform();
-    transformMat = glm::translate(transformMat, glm::vec3(.5f, 0.f, 0.f));
-    transformMat = glm::rotate(transformMat, glm::radians(-_openAngle), glm::vec3(0.0f, 0.0f, 1.0f));
-    transformMat = glm::translate(transformMat, glm::vec3(-.5f, 0.f, 0.f));
-
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(transformMat));
-
-    glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_BYTE, (void *)(6 * sizeof(GLubyte)));
-}
-
-void Pyramid::drawBack(GLuint shaderProgramID)
-{
-    _baseTransform();
-    transformMat = glm::translate(transformMat, glm::vec3(-.5f, 0.f, 0.f));
-    transformMat = glm::rotate(transformMat, glm::radians(_openAngle), glm::vec3(0.0f, 0.0f, 1.0f));
-    transformMat = glm::translate(transformMat, glm::vec3(.5f, 0.f, 0.f));
-
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(transformMat));
-
-    glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_BYTE, (void *)(9 * sizeof(GLubyte)));
-}
-
-void Pyramid::drawLeft(GLuint shaderProgramID)
-{
-    _baseTransform();
-    transformMat = glm::translate(transformMat, glm::vec3(0.f, 0.f, -.5f));
-    transformMat = glm::rotate(transformMat, glm::radians(-_openAngle), glm::vec3(1.0f, 0.0f, 0.0f));
-    transformMat = glm::translate(transformMat, glm::vec3(0.f, 0.f, .5f));
-
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(transformMat));
-
-    glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_BYTE, (void *)(12 * sizeof(GLubyte)));
-}
-
-void Pyramid::drawRight(GLuint shaderProgramID)
-{
-    _baseTransform();
-    transformMat = glm::translate(transformMat, glm::vec3(0.f, 0.f, .5f));
-    transformMat = glm::rotate(transformMat, glm::radians(_openAngle), glm::vec3(1.0f, 0.0f, 0.0f));
-    transformMat = glm::translate(transformMat, glm::vec3(0.f, 0.f, -.5f));
-
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(transformMat));
-
-    glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_BYTE, (void *)(15 * sizeof(GLubyte)));
-}
-
-void Pyramid::_baseTransform()
-{
-    transformMat = glm::mat4(1.f);
+    transformMat = glm::mat4(1.0f);
     transformMat = glm::translate(transformMat, pos);
     transformMat = glm::rotate(transformMat, glm::radians(rotate.x), glm::vec3(1.f, 0.f, 0.f));
     transformMat = glm::rotate(transformMat, glm::radians(rotate.y), glm::vec3(0.f, 1.f, 0.f));
-    transformMat = glm::rotate(transformMat, glm::radians(rotate.z), glm::vec3(0.f, 0.f, 1.f));
-    transformMat = glm::scale(transformMat, scale);
+
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(transformMat));
+    glUniform3f(glGetUniformLocation(shaderProgramID, "color"), .7f, .2f, 0.f);
+
+    gluSphere(sphere, .5f, 60, 60);
 }
 
-void Pyramid::transDownward() { _openAngle += 0.1f; }
-void Pyramid::transUpward() { _openAngle -= 0.1f; }
-
-void pyramid_animation(int value)
+void Planet::drawEarth(int idx, GLuint shaderProgramID)
 {
-    if (is_pyramid_animation)
+    model_earth[idx] = glm::mat4(1.0f);
+    model_earth[idx] = glm::translate(model_earth[idx], earth_pos[idx]);
+    // model_earth[idx] = glm::rotate(model_earth[idx], glm::radians(angle_earth[idx]), glm::vec3(0.f, 1.f, 0.f));
+    // model_earth[idx] = glm::translate(model_earth[idx], glm::vec3(radius_earth, 0.f, 0.f));
+
+    glm::mat4 model = transformMat * model_earth_orbit[idx] * model_earth[idx];
+
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+    glUniform3f(glGetUniformLocation(shaderProgramID, "color"), earth_color[idx].x, earth_color[idx].y, earth_color[idx].z);
+
+    gluSphere(sphere, .2f, 40, 40);
+}
+
+void Planet::drawOrbitMoon(int idx, GLuint shaderProgramID)
+{
+    model_moon_orbit[idx] = glm::mat4(1.0f);
+    model_moon_orbit[idx] = glm::translate(model_moon_orbit[idx], earth_pos[idx]);
+    if (idx == 1)
     {
-        if (pyramid_pointDirection == UPWARD)
+        model_moon_orbit[idx] = glm::rotate(model_moon_orbit[idx], glm::radians(-45.f), glm::vec3(0.f, 0.f, 1.f));
+    }
+    else if (idx == 2)
+    {
+        model_moon_orbit[idx] = glm::rotate(model_moon_orbit[idx], glm::radians(45.f), glm::vec3(0.f, 0.f, 1.f));
+    }
+    glm::mat4 model = transformMat * model_earth_orbit[idx] * model_moon_orbit[idx];
+
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+    glUniform3f(glGetUniformLocation(shaderProgramID, "color"), 1.f, 1.f, 1.f);
+    glDrawArrays(GL_LINE_LOOP, 361, 360);
+}
+
+void Planet::update()
+{
+    for (int i = 0; i < 3; i++)
+    {
+        angle_earth[i] += 0.1f + (0.05f * (float)i);
+
+        earth_pos[i].x = radius_earth * cos(glm::radians(angle_earth[i]));
+        earth_pos[i].y = 0.f;
+        earth_pos[i].z = radius_earth * sin(glm::radians(angle_earth[i]));
+    }
+    for (int i = 0; i < 3; i++)
+    {
+        angle_moon[i] += 0.5f - (0.05f * (float)i);
+    }
+}
+
+void Planet::drawMoon(int idx, GLuint shaderProgramID)
+{
+    model_moon[idx] = glm::mat4(1.0f);
+    model_moon[idx] = glm::translate(model_moon[idx], earth_pos[idx]);
+    if (idx == 1)
+    {
+        model_moon[idx] = glm::rotate(model_moon[idx], glm::radians(-45.f), glm::vec3(0.f, 0.f, 1.f));
+    }
+    else if (idx == 2)
+    {
+        model_moon[idx] = glm::rotate(model_moon[idx], glm::radians(45.f), glm::vec3(0.f, 0.f, 1.f));
+    }
+    model_moon[idx] = glm::rotate(model_moon[idx], glm::radians(angle_moon[idx]), glm::vec3(0.f, 1.f, 0.f));
+    model_moon[idx] = glm::translate(model_moon[idx], glm::vec3(radius_moon, 0.f, 0.f));
+
+    glm::mat4 model = transformMat * model_earth_orbit[idx] * model_moon[idx];
+
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+    glUniform3f(glGetUniformLocation(shaderProgramID, "color"), moon_color[idx].x, moon_color[idx].y, moon_color[idx].z);
+
+    gluSphere(sphere, .09f, 20, 20);
+}
+
+void updateTimer(int value)
+{
+    planet.update();
+    if (isRotatePositive)
+        planet.rotateY(1);
+    else if (isRotateNegative)
+        planet.rotateY(-1);
+    glutPostRedisplay();
+    glutTimerFunc(1000 / 60, updateTimer, 0);
+}
+
+void Planet::movement(int direction)
+{
+    switch (direction)
+    {
         {
-            pyramid.transDownward();
-            if (pyramid.getOpenAngle() >= 233.f)
-            {
-                pyramid_pointDirection = DOWNWARD;
-                is_pyramid_animation = false;
-            }
-            glutTimerFunc(5, pyramid_animation, 0);
-        }
-        else if (pyramid_pointDirection == DOWNWARD)
-        {
-            pyramid.transUpward();
-            if (pyramid.getOpenAngle() <= 0.f)
-            {
-                pyramid_pointDirection = UPWARD;
-                is_pyramid_animation = false;
-            }
-            glutTimerFunc(5, pyramid_animation, 0);
+        case LEFT:
+            pos.x -= 0.1f;
+            break;
+        case RIGHT:
+            pos.x += 0.1f;
+            break;
+        case UP:
+            pos.y += 0.1f;
+            break;
+        case DOWN:
+            pos.y -= 0.1f;
+            break;
+        case NEAR:
+            pos.z -= 0.1f;
+            break;
+        case FAR:
+            pos.z += 0.1f;
+            break;
         }
     }
-    glutPostRedisplay();
+}
+
+void Planet::objectTypeChange(int type)
+{
+    objectType = type;
+}
+
+int Planet::getObjectType()
+{
+    return objectType;
+}
+
+void Planet::rotateY(int direction)
+{
+    rotate.y += 0.1f * (float)direction;
 }

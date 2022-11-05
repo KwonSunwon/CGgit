@@ -79,29 +79,6 @@ GLuint initShader(char *vertexFile, char *fragmentFile)
     return ShaderProgramID;
 }
 
-// void initVAO(GLuint &VAO)
-// {
-//     glGenVertexArrays(1, &VAO);
-//     glBindVertexArray(VAO);
-// }
-
-// void initVBO_position(GLuint &VBO_position)
-// {
-//     glGenBuffers(1, &VBO_position);
-//     glBindBuffer(GL_ARRAY_BUFFER, VBO_position);
-// }
-// void initVBO_color(GLuint &VBO_color)
-// {
-//     glGenBuffers(1, &VBO_color);
-//     glBindBuffer(GL_ARRAY_BUFFER, VBO_color);
-// }
-
-// void initEBO(GLuint &EBO)
-// {
-//     glGenBuffers(1, &EBO);
-//     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-// }
-
 char *fileToBuf(char *file)
 {
     FILE *fptr;
