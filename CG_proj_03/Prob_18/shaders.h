@@ -3,12 +3,19 @@
 typedef class Camera
 {
 private:
+    float pitch;
+    float yaw;
+
+    float angle;
+
+    glm::mat4 viewTransform;
+
     glm::mat4 view;
     glm::mat4 projection;
     glm::mat4 ortho;
 
     glm::vec3 eye;
-    glm::vec3 center;
+    glm::vec3 target;
     glm::vec3 up;
 
     // Perspective
@@ -28,12 +35,20 @@ public:
     Camera();
 
     void setEye(glm::vec3 eye);
-    void setCenter(glm::vec3 center);
+    void setTarget(glm::vec3 target);
     void setUp(glm::vec3 up);
 
     glm::vec3 getEye();
-    glm::vec3 getCenter();
+    glm::vec3 getTarget();
     glm::vec3 getUp();
+
+    void setPitch(float pitch);
+    void setYaw(float yaw);
+    void setAngle(float angle);
+
+    float getPitch();
+    float getYaw();
+    float getAngle();
 
     void setFovy(float fovy);
     void setAspect(float aspect);

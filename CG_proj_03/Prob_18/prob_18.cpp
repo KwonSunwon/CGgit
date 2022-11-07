@@ -15,8 +15,8 @@ public:
     void init() override;
     void render(GLuint shaderProgramID) override;
 } Base;
-Base base;
 
+Base base;
 typedef class Crane : public Object
 {
 private:
@@ -43,6 +43,8 @@ public:
     void moveBase(int direction);
     void moveMiddle(int direction);
     void moveArm();
+
+    void reset();
 } Crane;
 Crane crane;
 
@@ -51,11 +53,16 @@ void initCamera();
 void cameraMoveZ(int direction);
 void cameraMoveX(int direction);
 
+Camera subCamera1;
+Camera subCamera2;
+
+void subCameraInit();
+
 GLvoid cameraRotateTimer(int direction);
-
-float getLength(glm::vec3 v, glm::vec3 u);
-
 bool isCameraRotate = false;
+
+GLvoid cameraRevolutionTimer(int direction);
+bool isCameraRevolution = false;
 
 void init();
 
@@ -120,10 +127,20 @@ GLvoid drawScene()
 
     glUseProgram(shaderProgramID);
 
+    glViewport(0, 100, 500, 500);
     // Camera
     camera.setCamera(shaderProgramID, 0);
-
     // Object Draw
+    for (int i = 0; i < objects.size(); ++i)
+        (*objects[i]).render(shaderProgramID);
+
+    glViewport(500, 400, 300, 300);
+    subCamera1.setCamera(shaderProgramID, 1); // xz plane
+    for (int i = 0; i < objects.size(); ++i)
+        (*objects[i]).render(shaderProgramID);
+
+    glViewport(500, 0, 300, 300);
+    subCamera2.setCamera(shaderProgramID, 1); // xy plane
     for (int i = 0; i < objects.size(); ++i)
         (*objects[i]).render(shaderProgramID);
 
@@ -132,7 +149,7 @@ GLvoid drawScene()
 
 GLvoid Reshape(int w, int h)
 {
-    glViewport(0, 0, w, h);
+    glViewport(0, 0, 800, 800);
 }
 
 GLvoid keyboard(unsigned char key, int x, int y)
@@ -233,8 +250,22 @@ GLvoid keyboard(unsigned char key, int x, int y)
         break;
 
     case 'r':
+        if (!isCameraRevolution)
+        {
+            isCameraRevolution = true;
+            cameraRevolutionTimer(1);
+        }
+        else
+            isCameraRevolution = false;
         break;
     case 'R':
+        if (!isCameraRevolution)
+        {
+            isCameraRevolution = true;
+            cameraRevolutionTimer(-1);
+        }
+        else
+            isCameraRevolution = false;
         break;
 
     case 'a':
@@ -248,12 +279,21 @@ GLvoid keyboard(unsigned char key, int x, int y)
         moveBase = false;
         moveMiddle = false;
         moveArm = false;
+        isCameraRotate = false;
+        isCameraRevolution = false;
         break;
 
     // All reset
     case 'c':
-        break;
     case 'C':
+        moveBase = false;
+        moveMiddle = false;
+        moveArm = false;
+        isCameraRotate = false;
+        isCameraRevolution = false;
+
+        crane.reset();
+        initCamera();
         break;
 
     // Exit
@@ -276,12 +316,16 @@ void initCamera()
     camera.setBottom(-2.0f);
     camera.setTop(2.0f);
 
-    camera.setEye(glm::vec3(0.0f, 1.0f, .8f));
+    camera.setYaw(-90.f);
+    camera.setPitch(-20.f);
+    camera.setAngle(0.f);
+    camera.setEye(glm::vec3(0.f, 1.f, 2.f));
 }
 
 void init()
 {
     initCamera();
+    subCameraInit();
     coord.init();
     base.init();
     crane.init();
@@ -465,14 +509,8 @@ void Crane::init()
         17, 22, 21};
 
     initModel(craneVertices, craneColors, craneIndices);
-    initPos();
-    pos.y = 0.01f;
-    scale = glm::vec3(0.3f);
 
-    basePosition = 0.f;
-    middleAngle = 0.f;
-    armAngle = 0.f;
-    armDirection = 1;
+    reset();
 
     initBuffer();
 }
@@ -580,47 +618,63 @@ GLvoid moveArmTimer(int value)
 void cameraMoveX(int direction)
 {
     glm::vec3 pos = camera.getEye();
-    pos.x += (float)direction * 0.1f;
+    pos += (float)direction * 0.1f * glm::normalize(glm::cross(camera.getTarget(), camera.getUp()));
     camera.setEye(pos);
-
-    glm::vec3 center = camera.getCenter();
-    center.x += (float)direction * 0.1f;
-    camera.setCenter(center);
 }
 
 void cameraMoveZ(int direction)
 {
     glm::vec3 pos = camera.getEye();
-    pos.z += (float)direction * 0.1f;
+    pos.z += (float)direction * 0.1f * camera.getTarget().z;
     camera.setEye(pos);
-
-    glm::vec3 center = camera.getCenter();
-    center.z += (float)direction * 0.1f;
-    camera.setCenter(center);
 }
 
-float getLength(glm::vec3 v, glm::vec3 u)
-{
-    return sqrt(pow(v.x - u.x, 2) + pow(v.y - u.y, 2) + pow(v.z - u.z, 2));
-}
-
-// TODO : 회전이 제대로 되지 않음 
 GLvoid cameraRotateTimer(int direction)
 {
     if (isCameraRotate)
     {
-        glm::vec3 pos = camera.getEye();
-        glm::vec3 center = camera.getCenter();
+        float yaw = camera.getYaw();
+        yaw += (float)direction * 1.f;
+        camera.setYaw(yaw);
 
-        float length = getLength(pos, center);
-        float angle = 0.01f * (float)direction;
-
-        center.x = center.x + length * cos(glm::radians(angle));
-        center.z = center.z + length * sin(glm::radians(angle));
-
-        camera.setCenter(center);
-
-        glutTimerFunc(100, cameraRotateTimer, direction);
+        glutTimerFunc(1000 / 60, cameraRotateTimer, direction);
     }
     glutPostRedisplay();
+}
+
+GLvoid cameraRevolutionTimer(int direction)
+{
+    if (isCameraRevolution)
+    {
+        float angle = camera.getAngle();
+        angle += (float)direction * 1.f;
+        camera.setAngle(angle);
+
+        glutTimerFunc(1000 / 60, cameraRevolutionTimer, direction);
+    }
+    glutPostRedisplay();
+}
+
+void Crane::reset()
+{
+    initPos();
+    pos.y = 0.01f;
+    scale = glm::vec3(0.3f);
+
+    basePosition = 0.f;
+    middleAngle = 0.f;
+    armAngle = 0.f;
+    armDirection = 1;
+}
+
+void subCameraInit()
+{
+    subCamera1.setEye(glm::vec3(0.f, 5.f, 0.f));
+    subCamera1.setTarget(glm::vec3(0.f, 0.f, 0.f));
+    subCamera1.setUp(glm::vec3(0.f, 1.f, 0.f));
+    subCamera1.setPitch(-90.f);
+
+    subCamera2.setEye(glm::vec3(0.f, 0.f, 3.f));
+    subCamera2.setTarget(glm::vec3(0.f, 0.f, 0.f));
+    subCamera2.setUp(glm::vec3(0.f, 1.f, 0.f));
 }

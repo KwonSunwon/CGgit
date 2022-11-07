@@ -104,8 +104,12 @@ char *fileToBuf(char *file)
 // Camera defualt constructor
 Camera::Camera()
 {
-    eye = glm::vec3(0.0f, 0.0f, 3.0f);
-    center = glm::vec3(0.0f, 0.0f, 0.0f);
+    pitch = 0.f;
+    yaw = -90.f;
+    angle = 0.f;
+
+    eye = glm::vec3(0.0f, 1.f, 2.f);
+    target = glm::vec3(0.0f, 0.0f, 0.0f);
     up = glm::vec3(0.0f, 1.0f, 0.0f);
 
     fovy = 45.0f;
@@ -122,9 +126,23 @@ Camera::Camera()
 
 void Camera::setCamera(GLuint shaderProgramID, int type) // 0 = perspective, 1 = ortho
 {
-    view = glm::lookAt(eye, center, up);
+    target.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
+    target.y = sin(glm::radians(pitch));
+    target.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
+    target = glm::normalize(target);
+
+    view = glm::lookAt(eye, eye + target, up);
     projection = glm::perspective(fovy, aspect, zNear, zFar);
     ortho = glm::ortho(left, right, bottom, top, zNear, zFar);
+
+    viewTransform = glm::mat4(1.0f);
+    viewTransform = glm::rotate(viewTransform, -glm::radians(pitch), glm::vec3(1.0f, 0.0f, 0.0f));
+    viewTransform = glm::translate(viewTransform, -eye);
+    viewTransform = glm::rotate(viewTransform, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
+    viewTransform = glm::translate(viewTransform, eye);
+    viewTransform = glm::rotate(viewTransform, glm::radians(pitch), glm::vec3(1.0f, 0.0f, 0.0f));
+
+    view = viewTransform * view;
 
     glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "view"), 1, GL_FALSE, glm::value_ptr(view));
     if (type == 0)
@@ -138,12 +156,20 @@ void Camera::setCamera(GLuint shaderProgramID, int type) // 0 = perspective, 1 =
 }
 
 void Camera::setEye(glm::vec3 eye) { this->eye = eye; }
-void Camera::setCenter(glm::vec3 center) { this->center = center; }
+void Camera::setTarget(glm::vec3 target) { this->target = target; }
 void Camera::setUp(glm::vec3 up) { this->up = up; }
 
 glm::vec3 Camera::getEye() { return eye; }
-glm::vec3 Camera::getCenter() { return center; }
+glm::vec3 Camera::getTarget() { return target; }
 glm::vec3 Camera::getUp() { return up; }
+
+void Camera::setPitch(float pitch) { this->pitch = pitch; }
+void Camera::setYaw(float yaw) { this->yaw = yaw; }
+void Camera::setAngle(float angle) { this->angle = angle; }
+
+float Camera::getPitch() { return pitch; }
+float Camera::getYaw() { return yaw; }
+float Camera::getAngle() { return angle; }
 
 void Camera::setFovy(float fovy) { this->fovy = fovy; }
 void Camera::setAspect(float aspect) { this->aspect = aspect; }
