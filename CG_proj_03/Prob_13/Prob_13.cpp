@@ -434,3 +434,13 @@ void yAxisRotationTimer(int direction)
     }
     glutPostRedisplay();
 }
+
+void testTimer(int value)
+{
+    float y = robot.getPos().y;
+    y += 0.1;
+    robot.setPos(glm::vec3(0, y, 0));
+
+    glutTimerFunc(50, testTimer, 0);
+    glutPostRedisplay();
+}
