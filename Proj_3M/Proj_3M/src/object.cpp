@@ -122,10 +122,10 @@ RECT Object::getBound()
 
     bound.left = v1.x;
     bound.right = v2.x;
-    bound.top = v1.z;
-    bound.bottom = v2.z;
+    bound.top = v2.z;
+    bound.bottom = v1.z;
 
-    cout << "left: " << bound.left << " right: " << bound.right << " top: " << bound.top << " bottom: " << bound.bottom << endl;
+    // cout << "left: " << bound.left << " right: " << bound.right << " top: " << bound.top << " bottom: " << bound.bottom << endl;
 
     return bound;
 }

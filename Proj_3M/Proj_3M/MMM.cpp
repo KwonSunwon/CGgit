@@ -17,8 +17,7 @@ PillarManager pillars;
 Player player;
 
 int projectionMode = PERSP;
-int test;
-int _count = 1;
+bool isShowPlayer = false;
 
 void initAllObjects();
 void update(int value);
@@ -95,16 +94,18 @@ GLvoid drawScene()
     mainCamera.setCamera(shaderID, projectionMode);
     base.render(shaderID);
     base2.render(shaderID);
-    // pillars.render(shaderID);
-    pillars.getPillar(0).render(shaderID);
-    player.render(shaderID);
+    pillars.render(shaderID);
+    // pillars.getPillar(399).render(shaderID);
+    if (isShowPlayer)
+        player.render(shaderID);
 
     glViewport(800, 400, 400, 400);
     minimapCamera.setCamera(shaderID, 0);
     base.render(shaderID);
     base2.render(shaderID);
     pillars.render(shaderID);
-    player.render(shaderID);
+    if (isShowPlayer)
+        player.render(shaderID);
 
     glutSwapBuffers();
 }
@@ -162,6 +163,7 @@ GLvoid keyboard(unsigned char key, int x, int y)
 
     // show character
     case 's':
+        isShowPlayer = true;
         break;
 
     // animation speed
@@ -180,7 +182,7 @@ GLvoid keyboard(unsigned char key, int x, int y)
 
     // reset
     case 'c':
-        if (isCollide(player.getBound(), pillars.getPillar(0).getBound()))
+        if (isCollide(player.getBound(), pillars.getPillar(399).getBound()))
             cout << "collide" << endl;
         break;
 
@@ -223,6 +225,7 @@ void initAllObjects()
     minimapCamera.setPitch(-90.f);
 
     base.init(1.f);
+
     base2.init(.5f);
     base2.setPosY(-.2f);
     base2.setScale(glm::vec3(1000.f, .1f, 1000.f));
@@ -235,8 +238,12 @@ void initAllObjects()
 void update(int value)
 {
     pillars.update();
-    player.update();
-    checkCollision();
+
+    if (isShowPlayer)
+    {
+        player.update();
+        checkCollision();
+    }
 
     glutTimerFunc(1000 / 60, update, 0);
     glutPostRedisplay();
@@ -245,6 +252,9 @@ void update(int value)
 bool isCollide(RECT a, RECT b)
 {
     // cout << "check collision" << endl;
+    // cout << "a : " << a.left << " " << a.right << " " << a.top << " " << a.bottom << endl;
+    // cout << "b : " << b.left << " " << b.right << " " << b.top << " " << b.bottom << endl;
+
     if (a.left > b.right || a.right < b.left || a.top < b.bottom || a.bottom > b.top)
         return false;
     return true;
@@ -252,18 +262,24 @@ bool isCollide(RECT a, RECT b)
 
 void checkCollision()
 {
-    // RECT playerRect = player.getBound();
     // RECT pillarRect = pillars.getPillar(0).getBound();
 
     // if (isCollide(playerRect, pillarRect))
-    //     player.handleCollision();
+    // player.handleCollision();
 
-    // for (int i = 0; i < pillars.getPillarCount(); i++)
-    // {
-    //     if (isCollide(playerRect, pillars.getPillar(i).getBound()))
-    //     {
-    //         cout << "collision" << endl;
-    //         player.handleCollision();
-    //     }
-    // }
+    RECT playerRect = player.getBound();
+
+    if (playerRect.left < -55.f || playerRect.right > 55.f || playerRect.top > 55.f || playerRect.bottom < -55.f)
+    {
+        player.handleCollision();
+        return;
+    }
+    for (int i = 0; i < pillars.getPillarCount(); i++)
+    {
+        if (isCollide(playerRect, pillars.getPillar(i).getBound()) && pillars.getPillar(i).getPos().y > -20.f)
+        {
+            player.handleCollision();
+            break;
+        }
+    }
 }
