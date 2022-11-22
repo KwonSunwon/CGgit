@@ -16,6 +16,7 @@ uniform_real_distribution<> random_height(5.0, 20.0);
 uniform_real_distribution<> random_step(0.0, 1.0);
 uniform_real_distribution<> random_speed(0.1, 0.5);
 uniform_real_distribution<> random_color(0.0, 1.0);
+uniform_int_distribution<> random_maze(0, 2);
 
 typedef class Base : public Object
 {
@@ -67,6 +68,9 @@ public:
     void init(int row, int col, int idx);
     void render(GLuint shaderProgramID) override;
     void update() override;
+
+    void setSpeed(float speed) { this->speed = speed; }
+    void setHeight(float height) { this->height = height; }
 } Pillar;
 
 typedef class PillarManager
@@ -79,6 +83,8 @@ public:
     void init(int row, int col);
     void render(GLuint shaderProgramID);
     void update();
+
+    void makeMaze();
 } PillarManager;
 
 void allObjectsInit();
@@ -210,6 +216,7 @@ GLvoid keyboard(unsigned char key, int x, int y)
 
     // make maze
     case 'r':
+        pillars.makeMaze();
         break;
 
     // show character
@@ -717,6 +724,64 @@ void PillarManager::update()
     for (int i = 0; i < pillars.size(); i++)
     {
         pillars[i].update();
+    }
+}
+
+void PillarManager::makeMaze()
+{
+    row = this->row;
+    col = this->col;
+
+    vector<int> maze;
+    for (int y = 0; y < row; y++)
+    {
+        for (int x = 0; x < col; x++)
+        {
+            if (x % 2 == 0 || y % 2 == 0)
+                maze.push_back(1);
+            else
+                maze.push_back(0);
+        }
+    }
+
+    for (int y = 0; y < row; y++)
+    {
+        int count = 1;
+        for (int x = 0; x < col; x++)
+        {
+            if (x % 2 == 0 || y % 2 == 0)
+                continue;
+
+            if (x == col - 2 && y == row - 2)
+                continue;
+
+            if (x == col - 2)
+            {
+                maze[(y + 1) * col + x] = 0;
+                continue;
+            }
+
+            if (y == row - 2)
+            {
+                maze[y * col + x + 1] = 0;
+                continue;
+            }
+
+            int rand = random_maze(gen);
+            if (rand == 0)
+            {
+                uniform_int_distribution<int> random_idx(0, count);
+                maze[(y + 1) * col + x - random_idx(gen) * 2] = 0;
+                count = 1;
+                break;
+            }
+            else
+            {
+                maze[y * col + x + 1] = 0;
+                count += 1;
+                break;
+            }
+        }
     }
 }
 
