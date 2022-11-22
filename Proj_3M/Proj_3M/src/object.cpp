@@ -108,3 +108,24 @@ void Object::initBuffer()
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size(), &indices[0], GL_STATIC_DRAW);
     }
 }
+
+RECT Object::getBound()
+{
+    RECT bound;
+
+    model = glm::mat4(1.f);
+    model = glm::translate(model, glm::vec3(pos.x, pos.y, pos.z));
+    model = glm::scale(model, glm::vec3(scale.x, scale.y, scale.z));
+
+    glm::vec4 v1 = model * glm::vec4(-.5f, 0.f, -.5f, 1.f);
+    glm::vec4 v2 = model * glm::vec4(.5f, 0.f, .5f, 1.f);
+
+    bound.left = v1.x;
+    bound.right = v2.x;
+    bound.top = v1.z;
+    bound.bottom = v2.z;
+
+    cout << "left: " << bound.left << " right: " << bound.right << " top: " << bound.top << " bottom: " << bound.bottom << endl;
+
+    return bound;
+}

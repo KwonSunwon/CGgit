@@ -15,6 +15,7 @@
 #include <vector>
 #include <algorithm>
 #include <time.h>
+#include <windows.h>
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -24,3 +25,14 @@
 #include <gl/glm/gtc/matrix_transform.hpp>
 
 using namespace std;
+
+#define BASE_SIZE 100.f
+#define GRAVITY 1.f
+
+#define PERSP 0
+#define ORTHO 1
+
+#define LEFT 0b0001
+#define RIGHT 0b0010
+#define UP 0b0100
+#define DOWN 0b1000

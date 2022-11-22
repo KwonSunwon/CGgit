@@ -1,3 +1,4 @@
+#pragma once
 #include "stdafx.h"
 
 typedef class Object
@@ -57,5 +58,7 @@ public:
     glm::vec3 getPos();
     glm::vec3 getScale();
     glm::vec3 getRotate();
+
+    RECT getBound();
 
 } Object;

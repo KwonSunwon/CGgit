@@ -1,7 +1,5 @@
 #include "camera.h"
 
-#pragma region "CameraClass"
-
 // Camera defualt constructor
 Camera::Camera()
 {
@@ -36,14 +34,14 @@ void Camera::setCamera(GLuint shaderProgramID, int type) // 0 = perspective, 1 =
     projection = glm::perspective(fovy, aspect, zNear, zFar);
     ortho = glm::ortho(left, right, bottom, top, zNear, zFar);
 
-    viewTransform = glm::mat4(1.0f);
-    viewTransform = glm::rotate(viewTransform, -glm::radians(pitch), glm::vec3(1.0f, 0.0f, 0.0f));
-    viewTransform = glm::translate(viewTransform, -eye);
-    viewTransform = glm::rotate(viewTransform, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
-    viewTransform = glm::translate(viewTransform, eye);
-    viewTransform = glm::rotate(viewTransform, glm::radians(pitch), glm::vec3(1.0f, 0.0f, 0.0f));
+    // viewTransform = glm::mat4(1.0f);
+    // viewTransform = glm::rotate(viewTransform, -glm::radians(pitch), glm::vec3(1.0f, 0.0f, 0.0f));
+    // viewTransform = glm::translate(viewTransform, -eye);
+    // viewTransform = glm::rotate(viewTransform, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
+    // viewTransform = glm::translate(viewTransform, eye);
+    // viewTransform = glm::rotate(viewTransform, glm::radians(pitch), glm::vec3(1.0f, 0.0f, 0.0f));
 
-    view = viewTransform * view;
+    // view = viewTransform * view;
 
     glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "view"), 1, GL_FALSE, glm::value_ptr(view));
     if (type == 0)
@@ -85,4 +83,3 @@ void Camera::setTop(float top) { this->top = top; }
 glm::mat4 Camera::getView() { return view; }
 glm::mat4 Camera::getProjection() { return projection; }
 glm::mat4 Camera::getOrtho() { return ortho; }
-#pragma endregion
