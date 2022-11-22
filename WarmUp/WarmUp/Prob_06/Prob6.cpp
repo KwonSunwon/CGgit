@@ -4,6 +4,7 @@
 #include <random>
 #include <time.h>
 #include <deque>
+#include <vector>
 
 #define LEFT 0b0001
 #define RIGHT 0b0010
@@ -14,7 +15,7 @@ using namespace std;
 
 // int board[30][30];
 
-deque<int> board[30];
+vector<int> board[30];
 
 void boardPrint();
 void boardInit();
@@ -251,18 +252,18 @@ bool boardMakeRoute()
 
 void boardMoveRight()
 {
-    for (int i = 0; i < 30; ++i)
-    {
-        board[i].push_front(board[i].back());
-        board[i].pop_back();
-    }
+    // for (int i = 0; i < 30; ++i)
+    // {
+    //     board[i].push_front(board[i].back());
+    //     board[i].pop_back();
+    // }
 }
 
 void boardMoveLeft()
 {
-    for (int i = 0; i < 30; ++i)
-    {
-        board[i].push_back(board[i].front());
-        board[i].pop_front();
-    }
+    // for (int i = 0; i < 30; ++i)
+    // {
+    //     board[i].push_back(board[i].front());
+    //     board[i].pop_front();
+    // }
 }

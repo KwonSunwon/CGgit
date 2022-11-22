@@ -14,6 +14,7 @@
 #include <random>
 #include <vector>
 #include <algorithm>
+#include <time.h>
 
 #define _USE_MATH_DEFINES
 #include <math.h>
