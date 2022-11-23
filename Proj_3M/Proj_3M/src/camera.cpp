@@ -21,6 +21,8 @@ Camera::Camera()
     right = 1.0f;
     bottom = -1.0f;
     top = 1.0f;
+
+    radius = -120.f;
 }
 
 void Camera::setCamera(GLuint shaderProgramID, int type) // 0 = perspective, 1 = ortho
@@ -74,3 +76,38 @@ void Camera::setTop(float top) { this->top = top; }
 glm::mat4 Camera::getView() { return view; }
 glm::mat4 Camera::getProjection() { return projection; }
 glm::mat4 Camera::getOrtho() { return ortho; }
+
+void Camera::update()
+{
+    if (isRotating)
+    {
+        rotate();
+    }
+}
+
+void Camera::setRotating(int isRotating)
+{
+    this->isRotating = isRotating;
+
+    if (isRotating)
+    {
+        radius = -120.f;
+    }
+}
+int Camera::getRotating() { return isRotating; }
+
+void Camera::rotate()
+{
+    if (isRotating == 1)
+    {
+        angle += 0.01f;
+        eye.x = radius * cos(angle);
+        eye.z = radius * sin(angle);
+    }
+    else if (isRotating == -1)
+    {
+        angle -= 0.01f;
+        eye.x = radius * cos(angle);
+        eye.z = radius * sin(angle);
+    }
+}

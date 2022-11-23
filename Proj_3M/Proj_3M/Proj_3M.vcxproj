@@ -142,6 +142,7 @@
     <ClCompile Include="MMM.cpp" />
     <ClCompile Include="src\base.cpp" />
     <ClCompile Include="src\camera.cpp" />
+    <ClCompile Include="src\firstCamera.cpp" />
     <ClCompile Include="src\maze.cpp" />
     <ClCompile Include="src\object.cpp" />
     <ClCompile Include="src\pillars.cpp" />
@@ -151,6 +152,7 @@
   <ItemGroup>
     <ClInclude Include="src\base.h" />
     <ClInclude Include="src\camera.h" />
+    <ClInclude Include="src\firstCamera.h" />
     <ClInclude Include="src\maze.h" />
     <ClInclude Include="src\object.h" />
     <ClInclude Include="src\pillars.h" />

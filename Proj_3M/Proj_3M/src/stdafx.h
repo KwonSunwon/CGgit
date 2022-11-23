@@ -36,3 +36,6 @@ using namespace std;
 #define RIGHT 0b0010
 #define UP 0b0100
 #define DOWN 0b1000
+
+#define THIRD 0
+#define FIRST 1

@@ -36,7 +36,7 @@ void Player::init()
     initPos();
 
     scale = glm::vec3(3.f, 3.f, 3.f);
-    pos = glm::vec3(50.f, 0.f, 50.f);
+    pos = glm::vec3(-50.f, 0.f, -50.f);
 }
 
 void Player::render(GLuint ID)
@@ -63,52 +63,106 @@ void Player::update()
 
 void Player::move()
 {
-    pos.x += speed * dir_x;
-    pos.z += speed * dir_z;
+    if (viewMode == THIRD)
+    {
+        pos.x += speed * dir_x;
+        pos.z += speed * dir_z;
+    }
+    else if (viewMode == FIRST)
+    {
+        pos.x += speed * cos(glm::radians(direction));
+        pos.z += speed * sin(glm::radians(direction));
+    }
 }
 
 void Player::keyInput(unsigned int key, int type)
 {
-    if (type == 0) // key down
+    if (viewMode == THIRD)
     {
-        switch (key)
+        if (type == 0) // key down
         {
-        case GLUT_KEY_UP:
-            dir_z = 1;
-            break;
-        case GLUT_KEY_DOWN:
-            dir_z = -1;
-            break;
-        case GLUT_KEY_LEFT:
-            dir_x = 1;
-            break;
-        case GLUT_KEY_RIGHT:
-            dir_x = -1;
-            break;
+            switch (key)
+            {
+            case GLUT_KEY_UP:
+                dir_z = 1;
+                break;
+            case GLUT_KEY_DOWN:
+                dir_z = -1;
+                break;
+            case GLUT_KEY_LEFT:
+                dir_x = 1;
+                break;
+            case GLUT_KEY_RIGHT:
+                dir_x = -1;
+                break;
+            }
+        }
+        else if (type == 1) // key up
+        {
+            switch (key)
+            {
+            case GLUT_KEY_UP:
+                dir_z = 0;
+                break;
+            case GLUT_KEY_DOWN:
+                dir_z = 0;
+                break;
+            case GLUT_KEY_LEFT:
+                dir_x = 0;
+                break;
+            case GLUT_KEY_RIGHT:
+                dir_x = 0;
+                break;
+            }
         }
     }
-    else if (type == 1) // key up
+    else if (viewMode == FIRST)
     {
-        switch (key)
+        if (type == 0) // key down
         {
-        case GLUT_KEY_UP:
-            dir_z = 0;
-            break;
-        case GLUT_KEY_DOWN:
-            dir_z = 0;
-            break;
-        case GLUT_KEY_LEFT:
-            dir_x = 0;
-            break;
-        case GLUT_KEY_RIGHT:
-            dir_x = 0;
-            break;
+            switch (key)
+            {
+            case GLUT_KEY_UP:
+                speed = 0.3;
+                break;
+            case GLUT_KEY_DOWN:
+                speed = -0.2;
+                break;
+            case GLUT_KEY_LEFT:
+                direction -= 10.f;
+                break;
+            case GLUT_KEY_RIGHT:
+                direction += 10.f;
+                break;
+            }
+        }
+        else if (type == 1) // key up
+        {
+            switch (key)
+            {
+            case GLUT_KEY_UP:
+            case GLUT_KEY_DOWN:
+                speed = 0.f;
+                break;
+            }
         }
     }
 }
 
+float Player::getDirection() { return direction; }
+void Player::setDirection(float dir) { direction = dir; }
+
 void Player::handleCollision()
 {
-    cout << "Collision" << endl;
+    // cout << "Collision" << endl;
     pos = prevPos;
+}
+
+void Player::setViewMode(int mode)
+{
+    viewMode = mode;
+    if (viewMode == THIRD)
+        speed = 0.3;
+    else
+        speed = 0.0;
 }

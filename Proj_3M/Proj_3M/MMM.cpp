@@ -7,9 +7,11 @@
 #include "src/pillars.h"
 #include "src/base.h"
 #include "src/player.h"
+#include "src/firstCamera.h"
 
 Camera mainCamera;
 Camera minimapCamera;
+FirstCamera firstCamera;
 
 Base base;
 Base base2;
@@ -18,6 +20,7 @@ Player player;
 
 int projectionMode = PERSP;
 bool isShowPlayer = false;
+int viewMode = THIRD;
 
 void initAllObjects();
 void update(int value);
@@ -33,6 +36,9 @@ GLvoid keyUp(int key, int x, int y);
 
 GLclampf g_color[4] = {0.f, 0.f, 0.f, 1.0f};
 GLint width = 1200, height = 800;
+
+int lastX = 0, lastY = 0;
+bool firstMouse = true;
 
 // shader variables
 GLuint shaderID;
@@ -91,17 +97,18 @@ GLvoid drawScene()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glViewport(0, 0, 800, height);
-    mainCamera.setCamera(shaderID, projectionMode);
-    // base2.render(shaderID);
+    if (viewMode == THIRD)
+        mainCamera.setCamera(shaderID, projectionMode);
+    else
+        firstCamera.setCamera(shaderID);
     base.render(shaderID);
-    // pillars.render(shaderID);
-    pillars.getPillar(12).render(shaderID);
+    pillars.render(shaderID);
+    // pillars.getPillar(0).render(shaderID);
     if (isShowPlayer)
         player.render(shaderID);
 
     glViewport(800, 400, 400, 400);
     minimapCamera.setCamera(shaderID, 0);
-    // base2.render(shaderID);
     base.render(shaderID);
     pillars.render(shaderID);
     if (isShowPlayer)
@@ -129,7 +136,6 @@ GLvoid keyboard(unsigned char key, int x, int y)
         break;
 
     // move camera
-    // FIXME: 움직일 때 바닥이 사라졌다 나타났다 함
     case 'z':
         if (projectionMode == PERSP)
             mainCamera.setEye(mainCamera.getEye() + glm::vec3(0, 0, 1));
@@ -149,8 +155,16 @@ GLvoid keyboard(unsigned char key, int x, int y)
 
     // y-axis rotation
     case 'y':
+        if (!mainCamera.getRotating())
+            mainCamera.setRotating(1);
+        else
+            mainCamera.setRotating(0);
         break;
     case 'Y':
+        if (!mainCamera.getRotating())
+            mainCamera.setRotating(-1);
+        else
+            mainCamera.setRotating(0);
         break;
 
     // make maze
@@ -178,16 +192,16 @@ GLvoid keyboard(unsigned char key, int x, int y)
 
     // change view mode
     case '1':
+        viewMode = FIRST;
+        player.setViewMode(viewMode);
         break;
     case '3':
+        viewMode = THIRD;
+        player.setViewMode(viewMode);
         break;
 
     // reset
     case 'c':
-        test = pillars.getPillar(12).getBound();
-        cout << test.x << " " << test.y << " " << test.z << " " << test.w << endl;
-        test = player.getBound();
-        cout << test.x << " " << test.y << " " << test.z << " " << test.w << endl;
         break;
 
     // Exit
@@ -238,9 +252,11 @@ void initAllObjects()
     base2.setPosY(-1.f);
     base2.setScale(glm::vec3(500.f, 1.f, 500.f));
 
-    pillars.init(5, 5);
+    pillars.init(20, 25);
 
     player.init();
+
+    firstCamera.init(player.getPos());
 }
 
 void update(int value)
@@ -252,6 +268,9 @@ void update(int value)
         player.update();
         checkCollision();
     }
+
+    mainCamera.update();
+    firstCamera.update(player.getPos(), player.getDirection());
 
     glutTimerFunc(1000 / 60, update, 0);
     glutPostRedisplay();
@@ -270,25 +289,25 @@ bool isCollide(glm::vec4 a, glm::vec4 b)
 
 void checkCollision()
 {
-    glm::vec4 playerRect = player.getBound();
-    glm::vec4 pillarRect = pillars.getPillar(12).getBound();
+    // glm::vec4 playerRect = player.getBound();
+    // glm::vec4 pillarRect = pillars.getPillar(12).getBound();
 
-    if (isCollide(playerRect, pillarRect))
-        player.handleCollision();
-
-    // RECT playerRect = player.getBound();
-
-    // if (playerRect.left < -55.f || playerRect.right > 55.f || playerRect.top > 55.f || playerRect.bottom < -55.f)
-    // {
+    // if (isCollide(playerRect, pillarRect))
     //     player.handleCollision();
-    //     return;
-    // }
-    // for (int i = 0; i < pillars.getPillarCount(); i++)
-    // {
-    //     if (isCollide(playerRect, pillars.getPillar(i).getBound()) && pillars.getPillar(i).getPos().y > -20.f)
-    //     {
-    //         player.handleCollision();
-    //         break;
-    //     }
-    // }
+
+    glm::vec4 playerRect = player.getBound();
+
+    if (playerRect.x < -55.f || playerRect.y > 55.f || playerRect.z > 55.f || playerRect.w < -55.f)
+    {
+        player.handleCollision();
+        return;
+    }
+    for (int i = 0; i < pillars.getPillarCount(); i++)
+    {
+        if (isCollide(playerRect, pillars.getPillar(i).getBound()) && pillars.getPillar(i).getPos().y > -20.f)
+        {
+            player.handleCollision();
+            break;
+        }
+    }
 }

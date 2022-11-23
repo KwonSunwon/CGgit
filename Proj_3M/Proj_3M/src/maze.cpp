@@ -24,6 +24,7 @@ vector<int> _makeMaze(int row, int col)
     bool isSameDirection;
 
     vector<int> maze(row * col, 0);
+    maze[0] = 1;
 
     while (1)
     {

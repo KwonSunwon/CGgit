@@ -3,7 +3,7 @@
 
 typedef class Camera
 {
-private:
+protected:
     float pitch;
     float yaw;
 
@@ -31,6 +31,9 @@ private:
 
     float zNear;
     float zFar;
+
+    int isRotating; // 0 = no, 1 = positive, -1 = negative
+    float radius;
 
 public:
     Camera();
@@ -65,5 +68,12 @@ public:
     glm::mat4 getView();
     glm::mat4 getProjection();
     glm::mat4 getOrtho();
+
+    void update();
+
+    void setRotating(int isRotating);
+    int getRotating();
+
+    void rotate();
 
 } Camera;
