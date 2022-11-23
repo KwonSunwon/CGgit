@@ -28,6 +28,8 @@ public:
     float getSpeed() { return this->speed; }
     float getHeight() { return this->height; }
     float getAnimating() { return this->isAnimating; }
+
+    void reset();
 } Pillar;
 
 typedef class PillarManager
@@ -53,4 +55,6 @@ public:
 
     int getPillarCount() { return this->pillars.size(); }
     Pillar getPillar(int idx) { return this->pillars[idx]; }
+
+    void reset();
 } PillarManager;

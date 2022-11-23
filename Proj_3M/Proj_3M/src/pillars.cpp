@@ -66,6 +66,18 @@ void Pillar::init(int row, int col, int idx)
     isAnimating = true;
 }
 
+void Pillar::reset()
+{
+    pos.y = 100.f;
+    step = 0;
+    isFall = true;
+    isAnimating = true;
+
+    height = random_height(gen);
+    scale.y = height;
+    speed = random_speed(gen);
+}
+
 void Pillar::render(GLuint shaderProgramID)
 {
     glUseProgram(shaderProgramID);
@@ -224,5 +236,14 @@ void PillarManager::speedDown()
     for (int i = 0; i < pillars.size(); i++)
     {
         pillars[i].setSpeed(pillars[i].getSpeed() * 0.9f);
+    }
+}
+
+void PillarManager::reset()
+{
+    isLowHeight = false;
+    for (int i = 0; i < pillars.size(); i++)
+    {
+        pillars[i].reset();
     }
 }

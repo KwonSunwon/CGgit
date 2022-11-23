@@ -8,7 +8,7 @@ private:
     int dir_x = 0;
     int dir_z = 0;
 
-    float direction = 0.f;
+    float direction = 90.f;
 
     glm::vec3 prevPos;
 
@@ -28,4 +28,6 @@ public:
     void setViewMode(int mode);
     void setDirection(float dir);
     float getDirection();
+
+    void reset();
 };

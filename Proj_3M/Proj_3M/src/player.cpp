@@ -39,6 +39,18 @@ void Player::init()
     pos = glm::vec3(-50.f, 0.f, -50.f);
 }
 
+void Player::reset()
+{
+    initPos();
+    scale = glm::vec3(3.f, 3.f, 3.f);
+    pos = glm::vec3(-50.f, 0.f, -50.f);
+    viewMode = THIRD;
+    direction = 90.f;
+    speed = 0.3;
+    dir_x = 0;
+    dir_z = 0;
+}
+
 void Player::render(GLuint ID)
 {
     model = glm::mat4(1.f);

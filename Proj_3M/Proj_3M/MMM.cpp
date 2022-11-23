@@ -23,6 +23,7 @@ bool isShowPlayer = false;
 int viewMode = THIRD;
 
 void initAllObjects();
+void resetAllObjects();
 void update(int value);
 
 void checkCollision();
@@ -36,9 +37,6 @@ GLvoid keyUp(int key, int x, int y);
 
 GLclampf g_color[4] = {0.f, 0.f, 0.f, 1.0f};
 GLint width = 1200, height = 800;
-
-int lastX = 0, lastY = 0;
-bool firstMouse = true;
 
 // shader variables
 GLuint shaderID;
@@ -202,6 +200,7 @@ GLvoid keyboard(unsigned char key, int x, int y)
 
     // reset
     case 'c':
+        resetAllObjects();
         break;
 
     // Exit
@@ -259,6 +258,21 @@ void initAllObjects()
     firstCamera.init(player.getPos());
 }
 
+void resetAllObjects()
+{
+    mainCamera.setEye(glm::vec3(0.f, 100.0f, -120.f));
+    mainCamera.setTarget(glm::vec3(0.f, 0.f, 0.f));
+    mainCamera.setPitch(-45.f);
+    mainCamera.setYaw(90.f);
+
+    player.reset();
+    pillars.reset();
+
+    isShowPlayer = false;
+    viewMode = THIRD;
+    projectionMode = PERSP;
+}
+
 void update(int value)
 {
     pillars.update();
@@ -278,10 +292,6 @@ void update(int value)
 
 bool isCollide(glm::vec4 a, glm::vec4 b)
 {
-    // cout << "check collision" << endl;
-    // cout << "a : " << a.left << " " << a.right << " " << a.top << " " << a.bottom << endl;
-    // cout << "b : " << b.left << " " << b.right << " " << b.top << " " << b.bottom << endl;
-
     if (a.x > b.y || a.y < b.x || a.z < b.w || a.w > b.z)
         return false;
     return true;
@@ -289,12 +299,6 @@ bool isCollide(glm::vec4 a, glm::vec4 b)
 
 void checkCollision()
 {
-    // glm::vec4 playerRect = player.getBound();
-    // glm::vec4 pillarRect = pillars.getPillar(12).getBound();
-
-    // if (isCollide(playerRect, pillarRect))
-    //     player.handleCollision();
-
     glm::vec4 playerRect = player.getBound();
 
     if (playerRect.x < -55.f || playerRect.y > 55.f || playerRect.z > 55.f || playerRect.w < -55.f)
