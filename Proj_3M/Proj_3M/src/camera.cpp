@@ -25,23 +25,14 @@ Camera::Camera()
 
 void Camera::setCamera(GLuint shaderProgramID, int type) // 0 = perspective, 1 = ortho
 {
-    target.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
-    target.y = sin(glm::radians(pitch));
-    target.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
-    target = glm::normalize(target);
+    // target.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
+    // target.y = sin(glm::radians(pitch));
+    // target.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
+    // target = glm::normalize(target);
 
-    view = glm::lookAt(eye, eye + target, up);
+    view = glm::lookAt(eye, target, up);
     projection = glm::perspective(fovy, aspect, zNear, zFar);
     ortho = glm::ortho(left, right, bottom, top, zNear, zFar);
-
-    // viewTransform = glm::mat4(1.0f);
-    // viewTransform = glm::rotate(viewTransform, -glm::radians(pitch), glm::vec3(1.0f, 0.0f, 0.0f));
-    // viewTransform = glm::translate(viewTransform, -eye);
-    // viewTransform = glm::rotate(viewTransform, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
-    // viewTransform = glm::translate(viewTransform, eye);
-    // viewTransform = glm::rotate(viewTransform, glm::radians(pitch), glm::vec3(1.0f, 0.0f, 0.0f));
-
-    // view = viewTransform * view;
 
     glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "view"), 1, GL_FALSE, glm::value_ptr(view));
     if (type == 0)

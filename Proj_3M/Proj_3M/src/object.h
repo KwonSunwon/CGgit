@@ -59,6 +59,6 @@ public:
     glm::vec3 getScale();
     glm::vec3 getRotate();
 
-    RECT getBound();
+    glm::vec4 getBound();
 
 } Object;

@@ -109,9 +109,9 @@ void Object::initBuffer()
     }
 }
 
-RECT Object::getBound()
+glm::vec4 Object::getBound()
 {
-    RECT bound;
+    glm::vec4 bound;
 
     model = glm::mat4(1.f);
     model = glm::translate(model, glm::vec3(pos.x, pos.y, pos.z));
@@ -120,10 +120,10 @@ RECT Object::getBound()
     glm::vec4 v1 = model * glm::vec4(-.5f, 0.f, -.5f, 1.f);
     glm::vec4 v2 = model * glm::vec4(.5f, 0.f, .5f, 1.f);
 
-    bound.left = v1.x;
-    bound.right = v2.x;
-    bound.top = v2.z;
-    bound.bottom = v1.z;
+    bound.x = v1.x;
+    bound.y = v2.x;
+    bound.z = v2.z;
+    bound.w = v1.z;
 
     // cout << "left: " << bound.left << " right: " << bound.right << " top: " << bound.top << " bottom: " << bound.bottom << endl;
 

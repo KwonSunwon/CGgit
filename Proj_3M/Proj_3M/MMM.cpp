@@ -23,7 +23,7 @@ void initAllObjects();
 void update(int value);
 
 void checkCollision();
-bool isCollide(RECT a, RECT b);
+bool isCollide(glm::vec4 a, glm::vec4 b);
 
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
@@ -92,17 +92,17 @@ GLvoid drawScene()
 
     glViewport(0, 0, 800, height);
     mainCamera.setCamera(shaderID, projectionMode);
+    // base2.render(shaderID);
     base.render(shaderID);
-    base2.render(shaderID);
-    pillars.render(shaderID);
-    // pillars.getPillar(399).render(shaderID);
+    // pillars.render(shaderID);
+    pillars.getPillar(12).render(shaderID);
     if (isShowPlayer)
         player.render(shaderID);
 
     glViewport(800, 400, 400, 400);
     minimapCamera.setCamera(shaderID, 0);
+    // base2.render(shaderID);
     base.render(shaderID);
-    base2.render(shaderID);
     pillars.render(shaderID);
     if (isShowPlayer)
         player.render(shaderID);
@@ -117,6 +117,8 @@ GLvoid Reshape(int w, int h)
 
 GLvoid keyboard(unsigned char key, int x, int y)
 {
+    glm::vec4 test;
+
     switch (key)
     {
     case 'o':
@@ -182,8 +184,10 @@ GLvoid keyboard(unsigned char key, int x, int y)
 
     // reset
     case 'c':
-        if (isCollide(player.getBound(), pillars.getPillar(399).getBound()))
-            cout << "collide" << endl;
+        test = pillars.getPillar(12).getBound();
+        cout << test.x << " " << test.y << " " << test.z << " " << test.w << endl;
+        test = player.getBound();
+        cout << test.x << " " << test.y << " " << test.z << " " << test.w << endl;
         break;
 
     // Exit
@@ -221,16 +225,20 @@ void initAllObjects()
     // Minimap init
     minimapCamera.setEye(glm::vec3(0.f, 120.0f, 0.f));
     minimapCamera.setTarget(glm::vec3(0.f, 0.f, 0.f));
+
+    minimapCamera.setUp(glm::vec3(0.f, 0.f, 1.f));
+
     minimapCamera.setzFar(500.f);
     minimapCamera.setPitch(-90.f);
 
     base.init(1.f);
+    base.setPosY(-100.f);
 
     base2.init(.5f);
-    base2.setPosY(-.2f);
-    base2.setScale(glm::vec3(1000.f, .1f, 1000.f));
+    base2.setPosY(-1.f);
+    base2.setScale(glm::vec3(500.f, 1.f, 500.f));
 
-    pillars.init(20, 20);
+    pillars.init(5, 5);
 
     player.init();
 }
@@ -249,37 +257,38 @@ void update(int value)
     glutPostRedisplay();
 }
 
-bool isCollide(RECT a, RECT b)
+bool isCollide(glm::vec4 a, glm::vec4 b)
 {
     // cout << "check collision" << endl;
     // cout << "a : " << a.left << " " << a.right << " " << a.top << " " << a.bottom << endl;
     // cout << "b : " << b.left << " " << b.right << " " << b.top << " " << b.bottom << endl;
 
-    if (a.left > b.right || a.right < b.left || a.top < b.bottom || a.bottom > b.top)
+    if (a.x > b.y || a.y < b.x || a.z < b.w || a.w > b.z)
         return false;
     return true;
 }
 
 void checkCollision()
 {
-    // RECT pillarRect = pillars.getPillar(0).getBound();
+    glm::vec4 playerRect = player.getBound();
+    glm::vec4 pillarRect = pillars.getPillar(12).getBound();
 
-    // if (isCollide(playerRect, pillarRect))
-    // player.handleCollision();
-
-    RECT playerRect = player.getBound();
-
-    if (playerRect.left < -55.f || playerRect.right > 55.f || playerRect.top > 55.f || playerRect.bottom < -55.f)
-    {
+    if (isCollide(playerRect, pillarRect))
         player.handleCollision();
-        return;
-    }
-    for (int i = 0; i < pillars.getPillarCount(); i++)
-    {
-        if (isCollide(playerRect, pillars.getPillar(i).getBound()) && pillars.getPillar(i).getPos().y > -20.f)
-        {
-            player.handleCollision();
-            break;
-        }
-    }
+
+    // RECT playerRect = player.getBound();
+
+    // if (playerRect.left < -55.f || playerRect.right > 55.f || playerRect.top > 55.f || playerRect.bottom < -55.f)
+    // {
+    //     player.handleCollision();
+    //     return;
+    // }
+    // for (int i = 0; i < pillars.getPillarCount(); i++)
+    // {
+    //     if (isCollide(playerRect, pillars.getPillar(i).getBound()) && pillars.getPillar(i).getPos().y > -20.f)
+    //     {
+    //         player.handleCollision();
+    //         break;
+    //     }
+    // }
 }

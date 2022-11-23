@@ -109,5 +109,6 @@ void Player::keyInput(unsigned int key, int type)
 
 void Player::handleCollision()
 {
+    cout << "Collision" << endl;
     pos = prevPos;
 }
