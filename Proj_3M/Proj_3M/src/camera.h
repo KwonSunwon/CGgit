@@ -37,6 +37,7 @@ protected:
 
 public:
     Camera();
+    Camera(int winWidth, int winHeight);
 
     void setEye(glm::vec3 eye);
     void setTarget(glm::vec3 target);

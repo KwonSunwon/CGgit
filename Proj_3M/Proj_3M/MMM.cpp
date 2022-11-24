@@ -9,14 +9,14 @@
 #include "src/player.h"
 #include "src/firstCamera.h"
 
-Camera mainCamera;
-Camera minimapCamera;
-FirstCamera firstCamera;
+GLvoid drawScene(GLvoid);
+GLvoid Reshape(int w, int h);
+GLvoid keyboard(unsigned char key, int x, int y);
+GLvoid specialKeyboard(int key, int x, int y);
+GLvoid keyUp(int key, int x, int y);
 
-Base base;
-Base base2;
-PillarManager pillars;
-Player player;
+GLclampf g_color[4] = {0.f, 0.f, 0.f, 1.0f};
+GLint width = 1200, height = 800;
 
 int projectionMode = PERSP;
 bool isShowPlayer = false;
@@ -29,20 +29,39 @@ void update(int value);
 void checkCollision();
 bool isCollide(glm::vec4 a, glm::vec4 b);
 
-GLvoid drawScene(GLvoid);
-GLvoid Reshape(int w, int h);
-GLvoid keyboard(unsigned char key, int x, int y);
-GLvoid specialKeyboard(int key, int x, int y);
-GLvoid keyUp(int key, int x, int y);
-
-GLclampf g_color[4] = {0.f, 0.f, 0.f, 1.0f};
-GLint width = 1200, height = 800;
+int row, col;
 
 // shader variables
 GLuint shaderID;
 
+int minimapSize = 200;
+
+Camera mainCamera(width, height);
+Camera minimapCamera(minimapSize, minimapSize);
+FirstCamera firstCamera(width, height);
+
+Base base;
+Base base2;
+PillarManager pillars;
+Player player;
+
 void main(int argc, char **argv)
 {
+    bool isWrongValue = true;
+
+    while (isWrongValue)
+    {
+        system("cls");
+        if (isWrongValue)
+            cout << "5 ~ 25 사이의 값 입력\n";
+        cout << "크기 입력 (행 / 열) : ";
+        cin >> row >> col;
+        if (row < 5 || col < 5 || row > 25 || col > 25)
+            isWrongValue = true;
+        else
+            isWrongValue = false;
+    }
+
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
     glutInitWindowPosition(100, 100);
@@ -54,20 +73,19 @@ void main(int argc, char **argv)
         std::cerr << "Unable to initialize GLEW" << std::endl;
         exit(EXIT_FAILURE);
     }
-    else
-        std::cout << "GLEW Initialized" << std::endl;
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
 
     char vertexFile[] = "res/shader.vert";
     char fragmentFile[] = "res/shader.frag";
     shaderID = initShader(vertexFile, fragmentFile);
 
     initAllObjects();
-
     update(0);
 
+    system("cls");
     cout << "o/p  : 투영 선택(직각/원근)\n";
     cout << "z/Z  : 원근 투영 시 z축으로 이동\n";
     cout << "m/M  : 육면체 기둥 위 아래로 애니메이션/정지\n";
@@ -94,19 +112,25 @@ GLvoid drawScene()
     glClearColor(g_color[0], g_color[1], g_color[2], g_color[3]);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glViewport(0, 0, 800, height);
+    glViewport(0, 0, width, height);
+    glUniform1f(glGetUniformLocation(shaderID, "alpha"), 1.f);
     if (viewMode == THIRD)
         mainCamera.setCamera(shaderID, projectionMode);
     else
         firstCamera.setCamera(shaderID);
     base.render(shaderID);
     pillars.render(shaderID);
-    // pillars.getPillar(0).render(shaderID);
     if (isShowPlayer)
         player.render(shaderID);
 
-    glViewport(800, 400, 400, 400);
+    glViewport(width - minimapSize, height - minimapSize, minimapSize, minimapSize);
+    glDepthFunc(GL_ALWAYS);
+    glUniform1f(glGetUniformLocation(shaderID, "alpha"), 0.0f);
     minimapCamera.setCamera(shaderID, 0);
+    base2.render(shaderID);
+
+    glDepthFunc(GL_LESS);
+    glUniform1f(glGetUniformLocation(shaderID, "alpha"), 1.f);
     base.render(shaderID);
     pillars.render(shaderID);
     if (isShowPlayer)
@@ -117,7 +141,6 @@ GLvoid drawScene()
 
 GLvoid Reshape(int w, int h)
 {
-    glViewport(0, 0, 800, 800);
 }
 
 GLvoid keyboard(unsigned char key, int x, int y)
@@ -248,10 +271,10 @@ void initAllObjects()
     base.setPosY(-100.f);
 
     base2.init(.5f);
-    base2.setPosY(-1.f);
+    base2.setPosY(-150.f);
     base2.setScale(glm::vec3(500.f, 1.f, 500.f));
 
-    pillars.init(20, 25);
+    pillars.init(row, col);
 
     player.init();
 

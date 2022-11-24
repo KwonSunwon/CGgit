@@ -1,7 +1,8 @@
 #include "camera.h"
 
 // Camera defualt constructor
-Camera::Camera()
+Camera::Camera() {}
+Camera::Camera(int winWidth, int winHeight)
 {
     pitch = 0.f;
     yaw = -90.f;
@@ -12,7 +13,7 @@ Camera::Camera()
     up = glm::vec3(0.0f, 1.0f, 0.0f);
 
     fovy = 45.0f;
-    aspect = 800.0f / 800.0f;
+    aspect = (float)winWidth / (float)winHeight;
 
     zNear = 0.1f;
     zFar = 100.0f;

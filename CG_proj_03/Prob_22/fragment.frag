@@ -13,6 +13,8 @@ uniform vec3 viewPos;
 uniform vec3 ambientLight;
 uniform int shininess;
 
+uniform int isOn;
+
 void main()
 {
     vec3 ambient = ambientLight * lightColor;
@@ -28,13 +30,10 @@ void main()
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
     vec3 specular = specStrength * spec * lightColor;
 
-    if(dot(norm, lightDir) < 0.0)
-    {
-        diffuse = vec3(0.0);
-        specular = vec3(0.0);
-    }
-
-    vec3 result = min((ambient + diffuse + specular) * fColor, 1.0);
+    vec3 result = ambient * fColor;
+    
+    if (isOn == 1)
+        result = (ambient + diffuse + specular) * fColor;
 
     fragColor = vec4(result , 1.0);
 }

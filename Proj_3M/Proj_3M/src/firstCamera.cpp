@@ -1,6 +1,6 @@
 #include "firstCamera.h"
-
-FirstCamera::FirstCamera()
+FirstCamera::FirstCamera() {}
+FirstCamera::FirstCamera(int winWidth, int winHeight)
 {
     eye = glm::vec3(0.0f, 0.0f, 0.0f);
     target = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -11,7 +11,7 @@ FirstCamera::FirstCamera()
     angle = 0.0f;
 
     fovy = 45.0f;
-    aspect = 800.0f / 800.0f;
+    aspect = (float)winWidth / (float)winHeight;
 
     zNear = 0.1f;
     zFar = 100.0f;

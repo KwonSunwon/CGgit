@@ -14,10 +14,15 @@ public:
 
 typedef class Orbit : public Object
 {
+private:
+    float radius;
+
 public:
     void init() override;
     void render(GLuint shaderProgramID) override;
     void initBuffer() override;
+
+    void changeOrbit(float radius);
 } Orbit;
 
 typedef class Light : public Object
@@ -27,7 +32,11 @@ private:
     glm::vec3 ambientLight;
     int shininess;
 
+    float radius = 4;
     float angle;
+    float angleStep = 0.f;
+
+    bool isOn = true;
 
 public:
     void init() override;
@@ -35,6 +44,10 @@ public:
     void setLightColor(glm::vec3 lightColor);
     void initBuffer() override;
     void update();
+
+    void setRadius(float radius);
+    void setAngleStep(float angleStep);
+    void turnOnOff();
 } Light;
 
 typedef class Cube : public Object
@@ -44,11 +57,25 @@ public:
     void render(GLuint shaderProgramID) override;
 } Cube;
 
+class Pyramid : public Object
+{
+public:
+    void init() override;
+    void render(GLuint shaderProgramID) override;
+};
+
 Orbit orbit;
 Light light;
 Camera camera;
 Coord coord;
 Cube cube;
+Pyramid pyramid;
+
+int drawObject = 1;
+float radius = 4.f;
+bool isMoving = false;
+bool isOn = true;
+bool isObjectRotating = false;
 
 void init();
 void update(int value);
@@ -105,7 +132,11 @@ GLvoid drawScene()
     light.render(shaderProgramID, camera.getEye());
     orbit.render(shaderProgramID);
     coord.render(shaderProgramID);
-    cube.render(shaderProgramID);
+
+    if (drawObject == 1)
+        cube.render(shaderProgramID);
+    else if (drawObject == -1)
+        pyramid.render(shaderProgramID);
 
     glutSwapBuffers();
 }
@@ -119,6 +150,36 @@ GLvoid keyboard(unsigned char key, int x, int y)
 {
     switch (key)
     {
+    case 'n':
+        drawObject *= -1;
+        break;
+
+    case 'm':
+        light.turnOnOff();
+        break;
+
+    case 'y':
+        isObjectRotating = !isObjectRotating;
+        break;
+
+    case 'z':
+        radius += 0.1f;
+        orbit.changeOrbit(radius);
+        light.setRadius(radius);
+        break;
+    case 'Z':
+        radius -= 0.1f;
+        orbit.changeOrbit(radius);
+        light.setRadius(radius);
+        break;
+
+    case 'r':
+        if (isMoving)
+            light.setAngleStep(0.f);
+        else
+            light.setAngleStep(0.4f);
+        isMoving = !isMoving;
+        break;
 
     // Exit
     case 'Q':
@@ -135,17 +196,25 @@ void init()
     orbit.init();
     light.init();
 
-    camera.setEye(glm::vec3(2, 1, 5.0f));
+    camera.setEye(glm::vec3(2, 1, 10.0f));
     // camera.setYaw(-90.f - 20.f);
     // camera.setPitch(-20.f);
     camera.setzFar(500.f);
 
     cube.init();
+    pyramid.init();
 }
 
 void update(int value)
 {
     light.update();
+
+    if (isObjectRotating)
+    {
+        cube.setRotateY(cube.getRotate().y + 0.2f);
+        pyramid.setRotateY(pyramid.getRotate().y + 0.2f);
+    }
+
     glutPostRedisplay();
     glutTimerFunc(1000 / 60, update, 0);
 }
@@ -351,6 +420,11 @@ void Light::init()
 
 void Light::render(GLuint shaderProgramID, glm::vec3 viewPos)
 {
+    if (isOn)
+        glUniform1i(glGetUniformLocation(shaderProgramID, "isOn"), 1);
+    else
+        glUniform1i(glGetUniformLocation(shaderProgramID, "isOn"), 0);
+
     glUniform3f(glGetUniformLocation(shaderProgramID, "lightColor"), lightColor.x, lightColor.y, lightColor.z);
     glUniform3f(glGetUniformLocation(shaderProgramID, "lightPos"), pos.x, pos.y, pos.z);
     glUniform3f(glGetUniformLocation(shaderProgramID, "viewPos"), viewPos.x, viewPos.y, viewPos.z);
@@ -398,9 +472,6 @@ void Light::initBuffer()
 
 void Light::update()
 {
-    float angleStep = 0.4;
-    float radius = 5;
-
     angle += angleStep;
 
     if (angle > 360)
@@ -408,22 +479,39 @@ void Light::update()
 
     pos.x = radius * cos(glm::radians(angle));
     pos.z = radius * sin(glm::radians(angle));
-    pos.y = 1.f;
+    pos.y = .5f;
 
     rotate.y += -angleStep;
+}
+
+void Light::setRadius(float value)
+{
+    radius = value;
+}
+
+void Light::setAngleStep(float value)
+{
+    angleStep = value;
+}
+
+void Light::turnOnOff()
+{
+    isOn = !isOn;
+    cout << "Light is " << (isOn ? "on" : "off") << endl;
 }
 
 // light move orbit
 void Orbit::init()
 {
+    radius = 4;
     float angle = 0;
     float angleStep = 360.f / 100.f;
 
     for (int i = 0; i < 100; i++)
     {
-        float x = cos(glm::radians(angle)) * 2.f;
-        float z = sin(glm::radians(angle)) * 2.f;
-        float y = 0.5f;
+        float x = cos(glm::radians(angle)) * radius;
+        float z = sin(glm::radians(angle)) * radius;
+        float y = .5f;
 
         vertices.push_back(x);
         vertices.push_back(y);
@@ -470,6 +558,100 @@ void Orbit::initBuffer()
     glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(float), &colors[0], GL_STATIC_DRAW);
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
     glEnableVertexAttribArray(2);
+}
+
+void Orbit::changeOrbit(float radius)
+{
+    this->radius = radius;
+
+    vertices.clear();
+
+    float angle = 0;
+    float angleStep = 360.f / 100.f;
+
+    for (int i = 0; i < 100; i++)
+    {
+        float x = cos(glm::radians(angle)) * radius;
+        float z = sin(glm::radians(angle)) * radius;
+        float y = 0.5f;
+
+        vertices.push_back(x);
+        vertices.push_back(y);
+        vertices.push_back(z);
+
+        angle += angleStep;
+    }
+
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
+}
+
+#pragma endregion
+
+#pragma region Pyramid
+
+void Pyramid::init()
+{
+    const vector<float> vertices = {
+        // front
+        +0.0, +0.5, +0.0, 0, 1, 1, // 0
+        -0.5, +0.0, +0.5, 0, 1, 1, // 2
+        +0.5, +0.0, +0.5, 0, 1, 1, // 3
+
+        // right
+        +0.0, +0.5, +0.0, 1, 1, 0, // 0
+        +0.5, +0.0, +0.5, 1, 1, 0, // 3
+        +0.5, +0.0, -0.5, 1, 1, 0, // 4
+
+        // left
+        +0.0, +0.5, +0.0, -1, 1, 0, // 0
+        -0.5, +0.0, -0.5, -1, 1, 0, // 1
+        -0.5, +0.0, +0.5, -1, 1, 0, // 2
+
+        // back
+        +0.0, +0.5, +0.0, 0, 1, -1, // 0
+        +0.5, +0.0, -0.5, 0, 1, -1, // 4
+        -0.5, +0.0, -0.5, 0, 1, -1, // 1
+
+        // bottom
+        -0.5, +0.0, -0.5, 0, -1, 0, // 1
+        +0.5, +0.0, -0.5, 0, -1, 0, // 4
+        +0.5, +0.0, +0.5, 0, -1, 0, // 3
+        +0.5, +0.0, +0.5, 0, -1, 0, // 3
+        -0.5, +0.0, +0.5, 0, -1, 0, // 2
+        -0.5, +0.0, -0.5, 0, -1, 0, // 1
+    };
+
+    vector<float> colors;
+    for (int i = 0; i < vertices.size() / 6; i++)
+    {
+        colors.push_back(0);
+        colors.push_back(1.f);
+        colors.push_back(0);
+    }
+
+    initModel(vertices, colors);
+    initBuffer();
+    initPos();
+
+    scale = glm::vec3(2.f);
+}
+
+void Pyramid::render(GLuint shaderProgramID)
+{
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, pos);
+    model = glm::rotate(model, glm::radians(rotate.x), glm::vec3(1.0f, 0.0f, 0.0f));
+    model = glm::rotate(model, glm::radians(rotate.y), glm::vec3(0.0f, 1.0f, 0.0f));
+    model = glm::rotate(model, glm::radians(rotate.z), glm::vec3(0.0f, 0.0f, 1.0f));
+    model = glm::scale(model, scale);
+
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+
+    glBindVertexArray(vao);
+    glDrawArrays(GL_TRIANGLES, 0, 18);
+    glBindVertexArray(0);
 }
 
 #pragma endregion

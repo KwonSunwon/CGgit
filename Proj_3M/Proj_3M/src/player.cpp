@@ -141,10 +141,10 @@ void Player::keyInput(unsigned int key, int type)
                 speed = -0.2;
                 break;
             case GLUT_KEY_LEFT:
-                direction -= 10.f;
+                direction -= 5.f;
                 break;
             case GLUT_KEY_RIGHT:
-                direction += 10.f;
+                direction += 5.f;
                 break;
             }
         }

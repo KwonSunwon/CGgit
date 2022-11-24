@@ -6,7 +6,7 @@ mt19937 gen(rd());
 uniform_real_distribution<> random_height(5.0, 20.0);
 uniform_real_distribution<> random_step(0.0, 1.0);
 uniform_real_distribution<> random_speed(0.1, 0.5);
-uniform_real_distribution<> random_color(0.0, 1.0);
+uniform_real_distribution<> random_color(0.2, 1.0);
 
 void Pillar::init(int row, int col, int idx)
 {
@@ -166,10 +166,15 @@ void PillarManager::update()
 void PillarManager::makeMaze()
 {
     vector<int> maze;
-    do
+
+    if (row < 10 && col < 10)
     {
-        maze = _makeMaze(row, col);
-    } while (maze.size() == 0);
+    }
+    else
+        do
+        {
+            maze = _makeMaze(row, col);
+        } while (maze.size() == 0);
 
     for (int i = 0; i < row; i++)
     {
