@@ -139,11 +139,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="camera.cpp" />
+    <ClCompile Include="object.cpp" />
+    <ClCompile Include="objReader.cpp" />
     <ClCompile Include="prob_23.cpp" />
     <ClCompile Include="shaders.cpp" />
+    <ClCompile Include="sphere.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="camera.h" />
+    <ClInclude Include="object.h" />
+    <ClInclude Include="objReader.h" />
     <ClInclude Include="shaders.h" />
+    <ClInclude Include="sphere.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>

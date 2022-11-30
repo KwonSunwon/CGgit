@@ -1,99 +1,66 @@
 #include "stdafx.h"
 #include "shaders.h"
 
-#define PERSP 0
-#define ORTHO 1
+#include "camera.h"
+#include "object.h"
+#include "sphere.h"
 
-#define SOLID 0
-#define WIREFRAME 1
-
-#define LEFT 0
-#define RIGHT 1
-#define DOWN 2
-#define UP 3
-#define NEAR 4
-#define FAR 5
-
-typedef class Planet : public Object
+typedef class Light : public Object
 {
 private:
-    int objectType;
+    glm::vec3 lightColor;
+    glm::vec3 ambientLight;
+    int shininess;
 
-    GLUquadricObj *sphere;
+    float radius = 4;
+    float angle;
+    float angleStep = 0.f;
 
-    glm::mat4 model_star;
+    bool isOn = true;
 
-    glm::vec3 earth_color[3];
-    glm::vec3 moon_color[3];
-
-    glm::vec3 earth_pos[3];
-
-    glm::mat4 model_earth[3];
-    glm::mat4 model_earth_orbit[3];
-
-    glm::mat4 model_moon[3];
-    glm::mat4 model_moon_orbit[3];
-
-    float angle_earth[3];
-    float angle_moon[3];
-
-    float radius_earth;
-    float radius_moon;
-
-    // use vao
-    vector<float> orbit_vertices;
-
-    // draw functions
-    void drawOrbit(GLuint shaderProgramID);
-    void drawOrbitMoon(int idx, GLuint shaderProgramID);
-    void drawStar(GLuint shaderProgramID);
-    void drawEarth(int idx, GLuint shaderProgramID);
-    void drawMoon(int idx, GLuint shaderProgramID);
+    vector<glm::vec3> colorSet;
+    unsigned int colorIndex = 0;
 
 public:
-    Planet();
     void init() override;
-    void initPlanet();
-    void initOrbitBuffer(GLuint shaderProgramID);
-
-    void draw_all(GLuint shaderProgramID);
-
+    void render(GLuint shaderProgramID, glm::vec3 viewPos);
+    void setLightColor(glm::vec3 lightColor);
+    void initBuffer() override;
     void update();
 
-    void movement(int direction);
-    void objectTypeChange(int type);
-    int getObjectType();
+    void setRadius(float radius);
+    void setAngleStep(float angleStep);
+    void turnOnOff();
 
-    void rotateY(int direction);
+    void changeColor();
+} Light;
 
-} Planet;
-
-Planet planet;
-
+Light light;
 Camera camera;
-void initCamera();
+
+vector<Object *> objects;
+
+int drawObject = 1;
+float radius = 4.f;
+bool isMoving = false;
 
 void init();
+void update(int value);
 
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
 GLvoid keyboard(unsigned char key, int x, int y);
 
-GLclampf g_color[4] = {0.f, 0.f, 0.f, 1.0f};
+GLclampf g_color[4] = {0.2f, 0.2f, 0.2f, 1.0f};
 
 // shader variables
 GLuint shaderProgramID;
 
-glm::mat4 model;
-glm::mat4 view;
-glm::mat4 projection;
-
-// variables
-int projectionType;
-bool isRotatePositive = false;
-bool isRotateNegative = false;
-
-void updateTimer(int value);
+const vector<glm::vec3> colorSet = {
+    glm::vec3(1.0, 0.2, 0.2),
+    glm::vec3(0.2, 1.0, 0.2),
+    glm::vec3(0.2, 0.2, 1.0),
+};
 
 void main(int argc, char **argv)
 {
@@ -112,17 +79,21 @@ void main(int argc, char **argv)
         std::cout << "GLEW Initialized" << std::endl;
 
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
 
-    char vertexFile[] = "vertex.vert";
-    char fragmentFile[] = "fragment.frag";
-    shaderProgramID = initShader(vertexFile, fragmentFile);
+    shaderProgramID = initShader("vertex.vert", "fragment.frag");
 
-    // Initialize
+    for (int i = 0; i < 3; ++i)
+    {
+        Sphere *sphere = new Sphere();
+        sphere->initBuffer();
+        sphere->colorInit(colorSet[i]);
+        sphere->setPos(glm::vec3(-3 * i, 0, -0.5 * i));
+        objects.push_back(sphere);
+    }
+
     init();
-
-    planet.init();
-
-    updateTimer(0);
+    update(0);
 
     glutKeyboardFunc(keyboard);
     glutDisplayFunc(drawScene);
@@ -137,88 +108,37 @@ GLvoid drawScene()
 
     glUseProgram(shaderProgramID);
 
-    // Camera transformation
-    if (projectionType == PERSP)
-        projection = camera.getProjection();
-    else
-        projection = camera.getOrtho();
-    view = camera.getView();
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "view"), 1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+    camera.setCamera(shaderProgramID, 0);
+    light.render(shaderProgramID, camera.getEye());
 
-    // Object Draw
-    planet.draw_all(shaderProgramID);
+    for (int i = 0; i < objects.size(); ++i)
+        objects[i]->render(shaderProgramID);
 
     glutSwapBuffers();
 }
 
 GLvoid Reshape(int w, int h)
 {
-    glViewport(0, 0, w, h);
+    glViewport(0, 0, 800, 800);
 }
 
 GLvoid keyboard(unsigned char key, int x, int y)
 {
     switch (key)
     {
-    // Camera type
-    case 'p':
-        if (projectionType == PERSP)
-            projectionType = ORTHO;
-        else
-            projectionType = PERSP;
+    case 'c':
+        light.changeColor();
         break;
 
-    // Object type Solid/Wireframe
-    case 'm':
-        if (planet.getObjectType() == SOLID)
-            planet.objectTypeChange(WIREFRAME);
+    case 'r':
+        if (isMoving)
+            light.setAngleStep(0.f);
         else
-            planet.objectTypeChange(SOLID);
+            light.setAngleStep(0.4f);
+        isMoving = !isMoving;
         break;
 
-    // Object Movement
-    case 'w':
-        planet.movement(UP);
-        break;
-    case 'a':
-        planet.movement(LEFT);
-        break;
-    case 's':
-        planet.movement(DOWN);
-        break;
-    case 'd':
-        planet.movement(RIGHT);
-        break;
-    case 'z':
-        planet.movement(NEAR);
-        break;
-    case 'x':
-        planet.movement(FAR);
-        break;
-
-    // Object Rotation
-    case 'y': // positive
-        if (!isRotatePositive)
-        {
-            if (isRotateNegative)
-                isRotateNegative = false;
-            isRotatePositive = true;
-        }
-        else
-            isRotatePositive = false;
-        break;
-    case 'Y': // negative
-        if (!isRotateNegative)
-        {
-            if (isRotatePositive)
-                isRotatePositive = false;
-            isRotateNegative = true;
-        }
-        else
-            isRotateNegative = false;
-        break;
-
+    // Exit
     case 'Q':
     case 'q':
         exit(0);
@@ -227,312 +147,161 @@ GLvoid keyboard(unsigned char key, int x, int y)
     glutPostRedisplay();
 }
 
-void initCamera()
-{
-    camera.setFovy(45.0f);
-    camera.setzNear(0.1f);
-    camera.setzFar(50.0f);
-
-    camera.setLeft(-2.0f);
-    camera.setRight(2.0f);
-    camera.setBottom(-2.0f);
-    camera.setTop(2.0f);
-
-    camera.setCamera();
-}
-
 void init()
 {
-    initCamera();
+    light.init();
+
+    camera.setEye(glm::vec3(2, 1, 10.0f));
+    camera.setzFar(500.f);
 }
 
-Planet::Planet()
+void update(int value)
 {
-    objectType = SOLID;
+    light.update();
 
-    model_star = glm::mat4(1.0f);
-    for (int i = 0; i < 3; i++)
+    glutPostRedisplay();
+    glutTimerFunc(1000 / 60, update, 0);
+}
+
+#pragma region LightClass
+
+void Light::init()
+{
+    const vector<float> vert = {
+        -.5f, 1.f, -.5f,
+        -.5f, 0.f, -.5f,
+        .5f, 0.f, -.5f,
+        .5f, 1.f, -.5f,
+
+        .5f, 1.f, .5f,
+        .5f, 0.f, .5f,
+        -.5f, 0.f, .5f,
+        -.5f, 1.f, .5f};
+
+    const vector<GLubyte> indices = {
+        0, 2, 1, 0, 3, 2, // Front
+        4, 6, 5, 4, 7, 6, // Back
+        7, 1, 6, 7, 0, 1, // Left
+        3, 5, 2, 3, 4, 5, // Right
+        7, 3, 0, 7, 4, 3, // Top
+        1, 5, 6, 1, 2, 5  // Bottom
+    };
+
+    vector<float> color;
+    for (int i = 0; i < 8; i++)
     {
-        model_earth[i] = glm::mat4(1.0f);
-        model_moon[i] = glm::mat4(1.0f);
+        color.push_back(1.f);
+        color.push_back(1.f);
+        color.push_back(1.f);
     }
 
-    model_earth_orbit[0] = glm::mat4(1.0f);
+    initModel(vert, color, indices);
+    initBuffer();
+    initPos();
 
-    model_earth_orbit[1] = glm::mat4(1.0f);
-    model_earth_orbit[1] = glm::rotate(model_earth_orbit[1], glm::radians(45.0f), glm::vec3(.0f, .0f, 1.0f));
+    lightColor = glm::vec3(1.f, 1.f, 1.f);
+    pos = glm::vec3(0.0f, 0.f, 1.f);
+    ambientLight = glm::vec3(0.2);
+    shininess = 256;
+    scale = glm::vec3(.1f, .1f, .1f);
 
-    model_earth_orbit[2] = glm::mat4(1.0f);
-    model_earth_orbit[2] = glm::rotate(model_earth_orbit[2], glm::radians(-45.0f), glm::vec3(.0f, .0f, 1.0f));
+    angle = 80;
 
-    model_moon_orbit[0] = glm::mat4(1.0f);
-
-    model_moon_orbit[1] = glm::mat4(1.0f);
-    model_moon_orbit[1] = glm::rotate(model_moon_orbit[1], glm::radians(-45.0f), glm::vec3(.0f, .0f, 1.0f));
-
-    model_moon_orbit[2] = glm::mat4(1.0f);
-    model_moon_orbit[2] = glm::rotate(model_moon_orbit[2], glm::radians(45.0f), glm::vec3(.0f, .0f, 1.0f));
-
-    angle_earth[0] = 0.f;
-    angle_earth[1] = 90.f;
-    angle_earth[2] = 180.f;
-
-    angle_moon[0] = 0.0f;
-    angle_moon[1] = 0.0f;
-    angle_moon[2] = 0.0f;
-
-    radius_earth = 1.3f;
-    radius_moon = .4f;
-
-    earth_color[0] = glm::vec3(0.3f, 0.8f, 1.0f);
-    earth_color[1] = glm::vec3(0.2f, 0.6f, 0.2f);
-    earth_color[2] = glm::vec3(0.8f, 0.5f, 0.0f);
-
-    moon_color[0] = glm::vec3(0.9f, 0.3f, 0.7f);
-    moon_color[1] = glm::vec3(0.1f, 0.2f, 0.3f);
-    moon_color[2] = glm::vec3(0.8f, 0.4f, 0.5f);
-
-    rotate = glm::vec3(10.f, 0.f, 0.f);
+    colorSet.push_back(glm::vec3(1.f, 1.f, 1.f));
+    colorSet.push_back(glm::vec3(1.f, 0.5f, 0.5f));
+    colorSet.push_back(glm::vec3(0.5f, 1.f, 0.5f));
+    colorSet.push_back(glm::vec3(0.5f, 0.5f, 1.f));
 }
 
-void Planet::init()
+void Light::render(GLuint shaderProgramID, glm::vec3 viewPos)
 {
-    initPlanet();
-    initOrbitBuffer(shaderProgramID);
+    if (isOn)
+        glUniform1i(glGetUniformLocation(shaderProgramID, "isOn"), 1);
+    else
+        glUniform1i(glGetUniformLocation(shaderProgramID, "isOn"), 0);
+
+    glUniform3f(glGetUniformLocation(shaderProgramID, "lightColor"), lightColor.x, lightColor.y, lightColor.z);
+    glUniform3f(glGetUniformLocation(shaderProgramID, "lightPos"), pos.x, pos.y, pos.z);
+    glUniform3f(glGetUniformLocation(shaderProgramID, "viewPos"), viewPos.x, viewPos.y, viewPos.z);
+    glUniform3f(glGetUniformLocation(shaderProgramID, "ambientLight"), ambientLight.x, ambientLight.y, ambientLight.z);
+    glUniform1i(glGetUniformLocation(shaderProgramID, "shininess"), shininess);
+
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, pos);
+    model = glm::rotate(model, glm::radians(rotate.x), glm::vec3(1.0f, 0.0f, 0.0f));
+    model = glm::rotate(model, glm::radians(rotate.y), glm::vec3(0.0f, 1.0f, 0.0f));
+    model = glm::rotate(model, glm::radians(rotate.z), glm::vec3(0.0f, 0.0f, 1.0f));
+    model = glm::scale(model, scale);
+
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+
+    glBindVertexArray(vao);
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, 0);
+    glBindVertexArray(0);
 }
 
-void Planet::initPlanet()
-{
-    sphere = gluNewQuadric();
-    gluQuadricDrawStyle(sphere, GLU_FILL);
-    gluQuadricNormals(sphere, GLU_SMOOTH);
-    gluQuadricTexture(sphere, GL_TRUE);
-
-    // orbit
-    float angle = 0;
-    float angleStepSize = 1;
-    float x, y, z;
-    for (angle; angle <= 360; angle += angleStepSize)
-    {
-        x = radius_earth * cos(glm::radians(angle));
-        y = 0.f;
-        z = radius_earth * sin(glm::radians(angle));
-        orbit_vertices.push_back(x);
-        orbit_vertices.push_back(y);
-        orbit_vertices.push_back(z);
-
-        // cout << angle << ": " << x << " " << y << " " << z << endl;
-    }
-
-    for (angle = 0; angle <= 360; angle += angleStepSize)
-    {
-        x = radius_moon * cos(glm::radians(angle));
-        y = 0.f;
-        z = radius_moon * sin(glm::radians(angle));
-        orbit_vertices.push_back(x);
-        orbit_vertices.push_back(y);
-        orbit_vertices.push_back(z);
-
-        // cout << angle << ": " << x << " " << y << " " << z << endl;
-    }
-}
-
-void Planet::initOrbitBuffer(GLuint shaderProgramID)
+void Light::initBuffer()
 {
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
 
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, orbit_vertices.size() * sizeof(float), &orbit_vertices[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, _vertices.size() * sizeof(float), &_vertices[0], GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
     glEnableVertexAttribArray(0);
-}
 
-void Planet::drawOrbit(GLuint shaderProgramID)
-{
-    glBindVertexArray(vao);
+    glGenBuffers(1, &cbo);
+    glBindBuffer(GL_ARRAY_BUFFER, cbo);
+    glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(float), &colors[0], GL_STATIC_DRAW);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+    glEnableVertexAttribArray(2);
 
-    glUniform3f(glGetUniformLocation(shaderProgramID, "color"), 1.f, 1.f, 1.f);
-
-    glm::mat4 model = transformMat;
-
-    // draw orbit 1 - xz plane
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(model * model_earth_orbit[0]));
-    glDrawArrays(GL_LINE_LOOP, 0, 360);
-
-    // draw orbit 2 - xz plane (45 degree)
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(model * model_earth_orbit[1]));
-    glDrawArrays(GL_LINE_LOOP, 0, 360);
-
-    // draw orbit 3 - xz plane (-45 degree)
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(model * model_earth_orbit[2]));
-    glDrawArrays(GL_LINE_LOOP, 0, 360);
-}
-
-void Planet::draw_all(GLuint shaderProgramID)
-{
-    if (objectType == SOLID)
+    if (!_indices.empty())
     {
-        gluQuadricDrawStyle(sphere, GLU_FILL);
-    }
-    else if (objectType == WIREFRAME)
-    {
-        gluQuadricDrawStyle(sphere, GLU_LINE);
-    }
-
-    // light
-    glUniform3f(glGetUniformLocation(shaderProgramID, "lightColor"), 1.0f, 1.0f, 1.0f);
-    glUniform3f(glGetUniformLocation(shaderProgramID, "lightPos"), 0.0f, 1.0f, 1.0f);
-    glUniform3f(glGetUniformLocation(shaderProgramID, "viewPos"), camera.getEye().x, camera.getEye().y, camera.getEye().z);
-
-    // Draw Star
-    drawStar(shaderProgramID);
-    drawOrbit(shaderProgramID);
-
-    for (int i = 0; i < 3; i++)
-    {
-        drawEarth(i, shaderProgramID);
-        drawOrbitMoon(i, shaderProgramID);
-        drawMoon(i, shaderProgramID);
+        glGenBuffers(1, &ebo);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, _indices.size(), &_indices[0], GL_STATIC_DRAW);
     }
 }
 
-void Planet::drawStar(GLuint shaderProgramID)
+void Light::update()
 {
-    transformMat = glm::mat4(1.0f);
-    transformMat = glm::translate(transformMat, pos);
-    transformMat = glm::rotate(transformMat, glm::radians(rotate.x), glm::vec3(1.f, 0.f, 0.f));
-    transformMat = glm::rotate(transformMat, glm::radians(rotate.y), glm::vec3(0.f, 1.f, 0.f));
+    angle += angleStep;
 
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(transformMat));
-    glUniform3f(glGetUniformLocation(shaderProgramID, "color"), .7f, .2f, 0.f);
+    if (angle > 360)
+        angle = 0;
 
-    gluSphere(sphere, .5f, 60, 60);
+    pos.x = radius * cos(glm::radians(angle));
+    pos.z = radius * sin(glm::radians(angle));
+    pos.y = .5f;
+
+    rotate.y += -angleStep;
 }
 
-void Planet::drawEarth(int idx, GLuint shaderProgramID)
+void Light::setRadius(float value)
 {
-    model_earth[idx] = glm::mat4(1.0f);
-    model_earth[idx] = glm::translate(model_earth[idx], earth_pos[idx]);
-    // model_earth[idx] = glm::rotate(model_earth[idx], glm::radians(angle_earth[idx]), glm::vec3(0.f, 1.f, 0.f));
-    // model_earth[idx] = glm::translate(model_earth[idx], glm::vec3(radius_earth, 0.f, 0.f));
-
-    glm::mat4 model = transformMat * model_earth_orbit[idx] * model_earth[idx];
-
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(model));
-    glUniform3f(glGetUniformLocation(shaderProgramID, "color"), earth_color[idx].x, earth_color[idx].y, earth_color[idx].z);
-
-    gluSphere(sphere, .2f, 40, 40);
+    radius = value;
 }
 
-void Planet::drawOrbitMoon(int idx, GLuint shaderProgramID)
+void Light::setAngleStep(float value)
 {
-    model_moon_orbit[idx] = glm::mat4(1.0f);
-    model_moon_orbit[idx] = glm::translate(model_moon_orbit[idx], earth_pos[idx]);
-    if (idx == 1)
-    {
-        model_moon_orbit[idx] = glm::rotate(model_moon_orbit[idx], glm::radians(-45.f), glm::vec3(0.f, 0.f, 1.f));
-    }
-    else if (idx == 2)
-    {
-        model_moon_orbit[idx] = glm::rotate(model_moon_orbit[idx], glm::radians(45.f), glm::vec3(0.f, 0.f, 1.f));
-    }
-    glm::mat4 model = transformMat * model_earth_orbit[idx] * model_moon_orbit[idx];
-
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(model));
-    glUniform3f(glGetUniformLocation(shaderProgramID, "color"), 1.f, 1.f, 1.f);
-    glDrawArrays(GL_LINE_LOOP, 361, 360);
+    angleStep = value;
 }
 
-void Planet::update()
+void Light::turnOnOff()
 {
-    for (int i = 0; i < 3; i++)
-    {
-        angle_earth[i] += 0.1f + (0.05f * (float)i);
-
-        earth_pos[i].x = radius_earth * cos(glm::radians(angle_earth[i]));
-        earth_pos[i].y = 0.f;
-        earth_pos[i].z = radius_earth * sin(glm::radians(angle_earth[i]));
-    }
-    for (int i = 0; i < 3; i++)
-    {
-        angle_moon[i] += 0.5f - (0.05f * (float)i);
-    }
+    isOn = !isOn;
+    cout << "Light is " << (isOn ? "on" : "off") << endl;
 }
 
-void Planet::drawMoon(int idx, GLuint shaderProgramID)
+void Light::changeColor()
 {
-    model_moon[idx] = glm::mat4(1.0f);
-    model_moon[idx] = glm::translate(model_moon[idx], earth_pos[idx]);
-    if (idx == 1)
-    {
-        model_moon[idx] = glm::rotate(model_moon[idx], glm::radians(-45.f), glm::vec3(0.f, 0.f, 1.f));
-    }
-    else if (idx == 2)
-    {
-        model_moon[idx] = glm::rotate(model_moon[idx], glm::radians(45.f), glm::vec3(0.f, 0.f, 1.f));
-    }
-    model_moon[idx] = glm::rotate(model_moon[idx], glm::radians(angle_moon[idx]), glm::vec3(0.f, 1.f, 0.f));
-    model_moon[idx] = glm::translate(model_moon[idx], glm::vec3(radius_moon, 0.f, 0.f));
+    colorIndex++;
+    if (colorIndex >= colorSet.size())
+        colorIndex = 0;
 
-    glm::mat4 model = transformMat * model_earth_orbit[idx] * model_moon[idx];
-
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, "model"), 1, GL_FALSE, glm::value_ptr(model));
-    glUniform3f(glGetUniformLocation(shaderProgramID, "color"), moon_color[idx].x, moon_color[idx].y, moon_color[idx].z);
-
-    gluSphere(sphere, .09f, 20, 20);
+    lightColor = colorSet[colorIndex];
 }
 
-void updateTimer(int value)
-{
-    planet.update();
-    if (isRotatePositive)
-        planet.rotateY(1);
-    else if (isRotateNegative)
-        planet.rotateY(-1);
-    glutPostRedisplay();
-    glutTimerFunc(1000 / 60, updateTimer, 0);
-}
-
-void Planet::movement(int direction)
-{
-    switch (direction)
-    {
-        {
-        case LEFT:
-            pos.x -= 0.1f;
-            break;
-        case RIGHT:
-            pos.x += 0.1f;
-            break;
-        case UP:
-            pos.y += 0.1f;
-            break;
-        case DOWN:
-            pos.y -= 0.1f;
-            break;
-        case NEAR:
-            pos.z -= 0.1f;
-            break;
-        case FAR:
-            pos.z += 0.1f;
-            break;
-        }
-    }
-}
-
-void Planet::objectTypeChange(int type)
-{
-    objectType = type;
-}
-
-int Planet::getObjectType()
-{
-    return objectType;
-}
-
-void Planet::rotateY(int direction)
-{
-    rotate.y += 0.1f * (float)direction;
-}
+#pragma endregion
