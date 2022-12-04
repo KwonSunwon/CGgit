@@ -31,6 +31,9 @@ protected:
     objRead objReader;
     // GLint object;
 
+    bool xAxisRotating = false;
+    bool yAxisRotating = false;
+
 public:
     Object();
 
@@ -84,6 +87,11 @@ public:
     glm::vec3 getRotate();
     glm::vec3 getRevolution();
     int getId();
+
+    bool getXAxisRotating() { return xAxisRotating; }
+    bool getYAxisRotating() { return yAxisRotating; }
+    void setXAxisRotating(bool value) { xAxisRotating = value; }
+    void setYAxisRotating(bool value) { yAxisRotating = value; }
 } Object;
 
 #endif

@@ -5,17 +5,69 @@
 
 Cube::Cube()
 {
-    object = objReader.loadObj("cube.obj");
-    vertices.resize(objReader.out_vertices.size());
-    normals.resize(objReader.out_normals.size());
-    uvs.resize(objReader.out_uvs.size());
-    for (int i = 0; i < objReader.out_vertices.size(); i++)
+    // object = objReader.loadObj("cube.obj");
+    // vertices.resize(objReader.out_vertices.size());
+    // normals.resize(objReader.out_normals.size());
+    // uvs.resize(objReader.out_uvs.size());
+
+    // for (int i = 0; i < objReader.out_vertices.size(); i++)
+    // {
+    //     vertices[i] = objReader.out_vertices[i];
+    //     normals[i] = objReader.out_normals[i];
+    //     uvs[i] = objReader.out_uvs[i];
+    // }
+
+    const vector<float> &temp = {
+        0, 0, 0, 0, 0, -1, 0, 1,
+        0, 1, 0, 0, 0, -1, 0, 0,
+        1, 1, 0, 0, 0, -1, 1, 0,
+        0, 0, 0, 0, 0, -1, 0, 1,
+        1, 1, 0, 0, 0, -1, 1, 0,
+        1, 0, 0, 0, 0, -1, 1, 1,
+
+        0, 0, 1, -1, 0, 0, 0, 1,
+        0, 1, 1, -1, 0, 0, 0, 0,
+        0, 1, 0, -1, 0, 0, 1, 0,
+        0, 0, 1, -1, 0, 0, 0, 1,
+        0, 1, 0, -1, 0, 0, 1, 0,
+        0, 0, 0, -1, 0, 0, 1, 1,
+
+        1, 0, 0, 1, 0, 0, 0, 1,
+        1, 1, 0, 1, 0, 0, 0, 0,
+        1, 1, 1, 1, 0, 0, 1, 0,
+        1, 0, 0, 1, 0, 0, 0, 1,
+        1, 1, 1, 1, 0, 0, 1, 0,
+        1, 0, 1, 1, 0, 0, 1, 1,
+
+        1, 0, 1, 0, 0, 1, 0, 1,
+        1, 1, 1, 0, 0, 1, 0, 0,
+        0, 1, 1, 0, 0, 1, 1, 0,
+        1, 0, 1, 0, 0, 1, 0, 1,
+        0, 1, 1, 0, 0, 1, 1, 0,
+        0, 0, 1, 0, 0, 1, 1, 1,
+
+        0, 1, 0, 0, 1, 0, 0, 1,
+        0, 1, 1, 0, 1, 0, 0, 0,
+        1, 1, 1, 0, 1, 0, 1, 0,
+        0, 1, 0, 0, 1, 0, 0, 1,
+        1, 1, 1, 0, 1, 0, 1, 0,
+        1, 1, 0, 0, 1, 0, 1, 1,
+
+        0, 0, 1, 0, -1, 0, 0, 1,
+        0, 0, 0, 0, -1, 0, 0, 0,
+        1, 0, 0, 0, -1, 0, 1, 0,
+        0, 0, 1, 0, -1, 0, 0, 1,
+        1, 0, 0, 0, -1, 0, 1, 0,
+        1, 0, 1, 0, -1, 0, 1, 1};
+
+    for (int i = 0; i < temp.size(); i += 8)
     {
-        vertices[i] = objReader.out_vertices[i];
-        normals[i] = objReader.out_normals[i];
-        uvs[i] = objReader.out_uvs[i];
+        vertices.push_back(glm::vec3(temp[i], temp[i + 1], temp[i + 2]));
+        normals.push_back(glm::vec3(temp[i + 3], temp[i + 4], temp[i + 5]));
+        uvs.push_back(glm::vec2(temp[i + 6], temp[i + 7]));
     }
     initPos();
+    pos = glm::vec3(-1, -1, -1);
 }
 
 void Cube::render(GLuint ID)
@@ -24,32 +76,24 @@ void Cube::render(GLuint ID)
 
     model = glm::mat4(1.0);
     model = glm::translate(model, pos);
+    model = glm::translate(model, glm::vec3(1, 1, 1));
     model = glm::rotate(model, glm::radians(rotate.x), glm::vec3(1.0, 0.0, 0.0));
     model = glm::rotate(model, glm::radians(rotate.y), glm::vec3(0.0, 1.0, 0.0));
     model = glm::rotate(model, glm::radians(rotate.z), glm::vec3(0.0, 0.0, 1.0));
-    // model = glm::scale(model, scale);
+    model = glm::translate(model, glm::vec3(-1, -1, -1));
+    model = glm::scale(model, glm::vec3(2, 2, 2));
 
     glUniformMatrix4fv(glGetUniformLocation(ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
     glBindVertexArray(vao);
 
-    glBindTexture(GL_TEXTURE_2D, textureID[1]);
-    glDrawArrays(GL_TRIANGLES, 0, 39);
+    int vertSize = vertices.size() / 6;
 
-    glBindTexture(GL_TEXTURE_2D, textureID[0]);
-    glDrawArrays(GL_TRIANGLES, 39, 39);
-
-    glBindTexture(GL_TEXTURE_2D, textureID[2]);
-    glDrawArrays(GL_TRIANGLES, 78, 39);
-
-    glBindTexture(GL_TEXTURE_2D, textureID[3]);
-    glDrawArrays(GL_TRIANGLES, 117, 39);
-
-    glBindTexture(GL_TEXTURE_2D, textureID[4]);
-    glDrawArrays(GL_TRIANGLES, 156, 39);
-
-    glBindTexture(GL_TEXTURE_2D, textureID[5]);
-    glDrawArrays(GL_TRIANGLES, 195, 39);
+    for (int i = 0; i < 6; ++i)
+    {
+        glBindTexture(GL_TEXTURE_2D, textureID[i]);
+        glDrawArrays(GL_TRIANGLES, vertSize * i, vertSize);
+    }
 }
 
 void Cube::initBuffer()
@@ -89,57 +133,49 @@ void Cube::initTexture()
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     }
 
-    glBindTexture(GL_TEXTURE_2D, textureID[0]);
     int width, height, nrChannels;
-    unsigned char *data = stbi_load("pic.png", &width, &height, &nrChannels, 0);
-    if (data)
-        glTexImage2D(GL_TEXTURE_2D, 0, 3, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-    else
-        std::cout << "Failed to load texture" << std::endl;
+    unsigned char *data;
+
+    glBindTexture(GL_TEXTURE_2D, textureID[0]);
+    data = stbi_load("cat.png", &width, &height, &nrChannels, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, 4, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
     stbi_image_free(data);
 
     glBindTexture(GL_TEXTURE_2D, textureID[1]);
-    data = stbi_load("pic.png", &width, &height, &nrChannels, 0);
-    if (data)
-        glTexImage2D(GL_TEXTURE_2D, 0, 3, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-    else
-        std::cout << "Failed to load texture" << std::endl;
+    data = stbi_load("cat1.png", &width, &height, &nrChannels, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, 4, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
     stbi_image_free(data);
 
     glBindTexture(GL_TEXTURE_2D, textureID[2]);
-    data = stbi_load("cat3.jpg", &width, &height, &nrChannels, 0);
-    if (data)
-        glTexImage2D(GL_TEXTURE_2D, 0, 3, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-    else
-        std::cout << "Failed to load texture" << std::endl;
+    data = stbi_load("cat2.png", &width, &height, &nrChannels, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, 4, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
     stbi_image_free(data);
 
     glBindTexture(GL_TEXTURE_2D, textureID[3]);
-    data = stbi_load("cat4.jpg", &width, &height, &nrChannels, 0);
-    if (data)
-        glTexImage2D(GL_TEXTURE_2D, 0, 3, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-    else
-        std::cout << "Failed to load texture" << std::endl;
+    data = stbi_load("img4.png", &width, &height, &nrChannels, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, 4, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
     stbi_image_free(data);
 
     glBindTexture(GL_TEXTURE_2D, textureID[4]);
-    data = stbi_load("cat5.jpg", &width, &height, &nrChannels, 0);
-    if (data)
-        glTexImage2D(GL_TEXTURE_2D, 0, 3, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-    else
-        std::cout << "Failed to load texture" << std::endl;
+    data = stbi_load("cat3.png", &width, &height, &nrChannels, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
     stbi_image_free(data);
 
     glBindTexture(GL_TEXTURE_2D, textureID[5]);
-    data = stbi_load("cat6.jpg", &width, &height, &nrChannels, 0);
-    if (data)
-        glTexImage2D(GL_TEXTURE_2D, 0, 3, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-    else
-        std::cout << "Failed to load texture" << std::endl;
+    data = stbi_load("cat5.png", &width, &height, &nrChannels, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, 4, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
     stbi_image_free(data);
 }
 
 void Cube::rotation(glm::vec3 rotate)
 {
     this->rotate += rotate;
+}
+
+void Cube::update()
+{
+    if (xAxisRotating)
+        rotate.x += 0.5;
+    if (yAxisRotating)
+        rotate.y += 0.5;
 }

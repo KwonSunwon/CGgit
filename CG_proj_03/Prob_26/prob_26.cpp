@@ -5,9 +5,17 @@
 #include "object.h"
 #include "cube.h"
 
-Camera camera;
+#include "light.h"
 
+#define CUBE 0
+#define PYRAMID 1
+
+Camera camera;
+Light light;
 Cube cube;
+
+vector<Object *> objects;
+int currentObject = CUBE;
 
 void init();
 void update(int value);
@@ -59,8 +67,9 @@ GLvoid drawScene()
     glUseProgram(shaderProgramID);
 
     camera.setCamera(shaderProgramID, 0);
+    light.setLight(shaderProgramID, camera.getEye());
 
-    cube.render(shaderProgramID);
+    objects[currentObject]->render(shaderProgramID);
 
     glutSwapBuffers();
 }
@@ -75,9 +84,38 @@ GLvoid keyboard(unsigned char key, int x, int y)
     switch (key)
     {
     case 'c':
+        currentObject = CUBE;
         break;
 
-    case 'r':
+    case 'p':
+        currentObject = PYRAMID;
+        break;
+
+    case 'x':
+        if (objects[currentObject]->getXAxisRotating())
+            objects[currentObject]->setXAxisRotating(false);
+        else
+            objects[currentObject]->setXAxisRotating(true);
+        break;
+
+    case 'y':
+        if (objects[currentObject]->getYAxisRotating())
+            objects[currentObject]->setYAxisRotating(false);
+        else
+            objects[currentObject]->setYAxisRotating(true);
+        break;
+
+    case 'w':
+        cube.rotation(glm::vec3(0.0f, 0.0f, -1.f));
+        break;
+    case 'a':
+        cube.rotation(glm::vec3(0.0f, 1.f, 0.0f));
+        break;
+    case 's':
+        cube.rotation(glm::vec3(0.0f, 0.0f, 1.f));
+        break;
+    case 'd':
+        cube.rotation(glm::vec3(0.0f, -1.f, 0.0f));
         break;
 
     // Exit
@@ -94,13 +132,15 @@ void init()
     cube.initBuffer();
     cube.initTexture();
 
+    objects.push_back(&cube);
+
     camera.setEye(glm::vec3(2, 3, 10.0f));
     camera.setzFar(500.f);
 }
 
 void update(int value)
 {
-    cube.rotation(glm::vec3(0.3, 0.3, 0));
+    objects[currentObject]->update();
 
     glutPostRedisplay();
     glutTimerFunc(1000 / 60, update, 0);

@@ -13,13 +13,18 @@ private:
 
     GLuint textureID[6];
 
+ 
+
 public:
     Cube();
     void render(GLuint shaderProgramID) override;
     void initTexture() override;
     void initBuffer() override;
+    void update() override;
 
     void rotation(glm::vec3 rotate);
+
+    
 };
 
 #endif // __CUBE_H__

@@ -6,7 +6,7 @@ layout(location = 2) in vec3 vColor;
 
 out vec3 fColor;
 
-out vec3  fPos;
+out vec3 fPos;
 out vec3 fNormal;
 
 uniform mat4 model;
