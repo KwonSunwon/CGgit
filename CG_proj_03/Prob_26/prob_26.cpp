@@ -6,6 +6,8 @@
 #include "cube.h"
 #include "pyramid.h"
 
+#include "bg.h"
+
 #include "light.h"
 
 #define CUBE 0
@@ -15,6 +17,7 @@ Camera camera;
 Light light;
 Cube cube;
 Pyramid pyramid;
+BG bg;
 
 vector<Object *> objects;
 int currentObject = CUBE;
@@ -71,6 +74,8 @@ GLvoid drawScene()
     camera.setCamera(shaderProgramID, 0);
     light.setLight(shaderProgramID, camera.getEye());
 
+    bg.render(shaderProgramID);
+
     objects[currentObject]->render(shaderProgramID);
 
     glutSwapBuffers();
@@ -107,17 +112,13 @@ GLvoid keyboard(unsigned char key, int x, int y)
             objects[currentObject]->setYAxisRotating(true);
         break;
 
-    case 'w':
-        cube.rotation(glm::vec3(0.0f, 0.0f, -1.f));
-        break;
-    case 'a':
-        cube.rotation(glm::vec3(0.0f, 1.f, 0.0f));
-        break;
     case 's':
-        cube.rotation(glm::vec3(0.0f, 0.0f, 1.f));
-        break;
-    case 'd':
-        cube.rotation(glm::vec3(0.0f, -1.f, 0.0f));
+        for (int i = 0; i < objects.size(); i++)
+        {
+            objects[i]->setXAxisRotating(false);
+            objects[i]->setYAxisRotating(false);
+            objects[i]->setRotate(glm::vec3(0, 0, 0));
+        }
         break;
 
     // Exit
@@ -137,11 +138,14 @@ void init()
     pyramid.initBuffer();
     pyramid.initTexture();
 
+    bg.initBuffer();
+    bg.initTexture();
+
     objects.push_back(&cube);
     objects.push_back(&pyramid);
 
     camera.setEye(glm::vec3(2, 3, 10.0f));
-    camera.setzFar(500.f);
+    camera.setzFar(100.f);
 }
 
 void update(int value)

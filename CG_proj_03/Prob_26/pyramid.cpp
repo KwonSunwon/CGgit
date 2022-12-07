@@ -52,9 +52,10 @@ void Pyramid::render(GLuint ID)
     model = glm::rotate(model, glm::radians(rotate.x), glm::vec3(1.0, 0.0, 0.0));
     model = glm::rotate(model, glm::radians(rotate.y), glm::vec3(0.0, 1.0, 0.0));
     model = glm::rotate(model, glm::radians(rotate.z), glm::vec3(0.0, 0.0, 1.0));
-    model = glm::scale(model, glm::vec3(2, 2, 2));
+    model = glm::scale(model, glm::vec3(2, 3, 2));
 
     glUniformMatrix4fv(glGetUniformLocation(ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+    glUniform1i(glGetUniformLocation(ID, "lightOn"), 1);
 
     glBindVertexArray(vao);
 

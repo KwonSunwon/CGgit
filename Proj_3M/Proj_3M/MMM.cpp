@@ -113,7 +113,6 @@ GLvoid drawScene()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glViewport(0, 0, width, height);
-    glUniform1f(glGetUniformLocation(shaderID, "alpha"), 1.f);
     if (viewMode == THIRD)
         mainCamera.setCamera(shaderID, projectionMode);
     else
@@ -125,12 +124,10 @@ GLvoid drawScene()
 
     glViewport(width - minimapSize, height - minimapSize, minimapSize, minimapSize);
     glDepthFunc(GL_ALWAYS);
-    glUniform1f(glGetUniformLocation(shaderID, "alpha"), 0.0f);
     minimapCamera.setCamera(shaderID, 0);
     base2.render(shaderID);
 
     glDepthFunc(GL_LESS);
-    glUniform1f(glGetUniformLocation(shaderID, "alpha"), 1.f);
     base.render(shaderID);
     pillars.render(shaderID);
     if (isShowPlayer)
@@ -176,16 +173,18 @@ GLvoid keyboard(unsigned char key, int x, int y)
 
     // y-axis rotation
     case 'y':
-        if (!mainCamera.getRotating())
-            mainCamera.setRotating(1);
-        else
-            mainCamera.setRotating(0);
+        if (viewMode == THIRD)
+            if (!mainCamera.getRotating())
+                mainCamera.setRotating(1);
+            else
+                mainCamera.setRotating(0);
         break;
     case 'Y':
-        if (!mainCamera.getRotating())
-            mainCamera.setRotating(-1);
-        else
-            mainCamera.setRotating(0);
+        if (viewMode == THIRD)
+            if (!mainCamera.getRotating())
+                mainCamera.setRotating(-1);
+            else
+                mainCamera.setRotating(0);
         break;
 
     // make maze

@@ -167,14 +167,10 @@ void PillarManager::makeMaze()
 {
     vector<int> maze;
 
-    if (row < 10 && col < 10)
+    do
     {
-    }
-    else
-        do
-        {
-            maze = _makeMaze(row, col);
-        } while (maze.size() == 0);
+        maze = _makeMaze(row, col);
+    } while (maze.size() == 0);
 
     for (int i = 0; i < row; i++)
     {

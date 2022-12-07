@@ -12,8 +12,15 @@ uniform vec3 lightColor;
 uniform vec3 lightPos;
 uniform vec3 viewPos;
 
+uniform int lightOn;
+
 void main()
 {
+    if (lightOn == 0) {
+        fragColor = texture(tex, fTexture);
+        return;
+    }
+
     float ambientLight = 0.5;
     vec3 ambient = ambientLight * lightColor;
 

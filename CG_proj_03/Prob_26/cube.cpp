@@ -84,6 +84,7 @@ void Cube::render(GLuint ID)
     model = glm::scale(model, glm::vec3(2, 2, 2));
 
     glUniformMatrix4fv(glGetUniformLocation(ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+    glUniform1i(glGetUniformLocation(ID, "lightOn"), 1);
 
     glBindVertexArray(vao);
 
