@@ -144,6 +144,7 @@
     <ClInclude Include="light.h" />
     <ClInclude Include="object.h" />
     <ClInclude Include="objReader.h" />
+    <ClInclude Include="pyramid.h" />
     <ClInclude Include="shaders.h" />
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="stdafx.h" />
@@ -155,6 +156,7 @@
     <ClCompile Include="object.cpp" />
     <ClCompile Include="objReader.cpp" />
     <ClCompile Include="prob_26.cpp" />
+    <ClCompile Include="pyramid.cpp" />
     <ClCompile Include="shaders.cpp" />
   </ItemGroup>
   <ItemGroup>

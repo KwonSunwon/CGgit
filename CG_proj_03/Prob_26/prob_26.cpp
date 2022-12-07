@@ -4,6 +4,7 @@
 #include "camera.h"
 #include "object.h"
 #include "cube.h"
+#include "pyramid.h"
 
 #include "light.h"
 
@@ -13,6 +14,7 @@
 Camera camera;
 Light light;
 Cube cube;
+Pyramid pyramid;
 
 vector<Object *> objects;
 int currentObject = CUBE;
@@ -132,7 +134,11 @@ void init()
     cube.initBuffer();
     cube.initTexture();
 
+    pyramid.initBuffer();
+    pyramid.initTexture();
+
     objects.push_back(&cube);
+    objects.push_back(&pyramid);
 
     camera.setEye(glm::vec3(2, 3, 10.0f));
     camera.setzFar(500.f);

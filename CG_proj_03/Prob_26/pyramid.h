@@ -1,9 +1,9 @@
-#ifndef __CUBE_H__
-#define __CUBE_H__
+#ifndef __PYRAMID_H__
+#define __PYRAMID_H__
 
 #include "object.h"
 
-class Cube : public Object
+class Pyramid : public Object
 {
 private:
     GLint object;
@@ -11,17 +11,14 @@ private:
     vector<glm::vec3> normals;
     vector<glm::vec2> uvs;
 
-    GLuint textureID[6];
-
+    GLuint textureID[5];
 
 public:
-    Cube();
+    Pyramid();
     void render(GLuint shaderProgramID) override;
     void initTexture() override;
     void initBuffer() override;
     void update() override;
-
-    void rotation(glm::vec3 rotate);
 };
 
-#endif // __CUBE_H__
+#endif
